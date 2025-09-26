@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import "./IPlanManager.sol";
+import "./interfaces/IPlanManager.sol";
 
 contract PlanManager is IPlanManager {
     // State variables
@@ -179,31 +179,31 @@ contract PlanManager is IPlanManager {
         for (uint256 i = 0; i < allocations.length; i++) {
             AssetAllocation memory allocation = allocations[i];
 
-            // Check percentage bounds
-            require(
-                allocation.targetPercentage > 0,
-                "Target percentage must be greater than 0"
-            );
-            require(
-                allocation.targetPercentage <= 10000,
-                "Target percentage cannot exceed 100%"
-            );
-            require(
-                allocation.minPercentage <= allocation.targetPercentage,
-                "Min percentage cannot exceed target"
-            );
-            require(
-                allocation.maxPercentage >= allocation.targetPercentage,
-                "Max percentage cannot be less than target"
-            );
-            require(
-                allocation.maxPercentage <= 10000,
-                "Max percentage cannot exceed 100%"
-            );
-            require(
-                allocation.tokenAddress != address(0),
-                "Token address cannot be zero"
-            );
+            // // Check percentage bounds
+            // require(
+            //     allocation.targetPercentage > 0,
+            //     "Target percentage must be greater than 0"
+            // );
+            // require(
+            //     allocation.targetPercentage <= 10000,
+            //     "Target percentage cannot exceed 100%"
+            // );
+            // require(
+            //     allocation.minPercentage <= allocation.targetPercentage,
+            //     "Min percentage cannot exceed target"
+            // );
+            // require(
+            //     allocation.maxPercentage >= allocation.targetPercentage,
+            //     "Max percentage cannot be less than target"
+            // );
+            // require(
+            //     allocation.maxPercentage <= 10000,
+            //     "Max percentage cannot exceed 100%"
+            // );
+            // require(
+            //     allocation.tokenAddress != address(0),
+            //     "Token address cannot be zero"
+            // );
 
             totalPercentage += allocation.targetPercentage;
         }
