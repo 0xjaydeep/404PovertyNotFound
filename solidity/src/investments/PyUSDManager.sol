@@ -47,6 +47,7 @@ interface IPriceOracle {
  */
 contract PyUSDManager is Ownable {
     using SafeERC20 for IERC20;
+    using SafeERC20 for IPYUSD;
     
     // State variables
     IPYUSD public pyusdToken;
@@ -100,7 +101,7 @@ contract PyUSDManager is Ownable {
         _;
     }
     
-    constructor() {
+    constructor() Ownable(msg.sender) {
         // Contract starts inactive until properly initialized
     }
     

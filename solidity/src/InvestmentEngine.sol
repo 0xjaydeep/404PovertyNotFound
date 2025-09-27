@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import "./interfaces/IInvestmentEngine.sol";
-import "./interfaces/IPlanManager.sol";
+import {IPlanManager} from "./interfaces/IPlanManager.sol";
 
 // PyUSD Manager Interface
 interface IPyUSDManager {
@@ -182,22 +182,22 @@ contract InvestmentEngine is IInvestmentEngine {
     function _executeInvestmentWithPyUSD(Investment storage investment) internal {
         // Get investment plan allocations
         try IPlanManager(planManager).getAssetAllocationLimits(investment.planId) 
-            returns (AssetAllocation[] memory allocations) {
+            returns (IPlanManager.AssetAllocation[] memory allocations) {
             
             uint256 totalExecutedAmount = 0;
             
             for (uint256 i = 0; i < allocations.length; i++) {
-                AssetAllocation memory allocation = allocations[i];
+                IPlanManager.AssetAllocation memory allocation = allocations[i];
                 uint256 allocationAmount = (investment.totalAmount * allocation.targetPercentage) / 10000;
                 
-                if (allocation.assetClass == AssetClass.Stablecoin && allocationAmount > 0) {
+                if (allocation.assetClass == IPlanManager.AssetClass.Stablecoin && allocationAmount > 0) {
                     // CRITICAL CALL: Delegate PyUSD conversion to PyUSDManager
                     try pyusdManager.convertETHToPyUSD{value: allocationAmount}(
                         investment.user,
                         investment.investmentId,
                         allocationAmount,
                         allocation.tokenAddress // destination (address(0) keeps in PyUSDManager)
-                    ) returns (uint256 pyusdReceived) {
+                    ) {
                         // PyUSD conversion successful
                         // PyUSDManager handles all tracking internally
                     } catch {
@@ -269,7 +269,7 @@ contract InvestmentEngine is IInvestmentEngine {
     }
 
     // Rebalancing Functions
-    function rebalance(address user, uint256 planId) external onlyOwner {
+    function rebalance(address user, uint256 /*planId*/) external view onlyOwner {
         require(user != address(0), "Invalid user address");
 
         // Simple rebalancing logic - in a real implementation, this would
@@ -360,7 +360,7 @@ contract InvestmentEngine is IInvestmentEngine {
         return pendingInvestments;
     }
 
-    function getTotalValueLocked() external view returns (uint256) {
+    function getTotalValueLocked() external pure returns (uint256) {
         // In a real implementation, this would aggregate all user balances
         // For simplicity, returning 0 for now
         return 0;
