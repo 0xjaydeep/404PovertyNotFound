@@ -28,8 +28,17 @@ contract MockUniswapV4Router is IUniswapV4Router {
                                EVENTS
     //////////////////////////////////////////////////////////////*/
 
-    event ExchangeRateSet(address indexed tokenIn, address indexed tokenOut, uint256 rate);
-    event SwapExecuted(address indexed tokenIn, address indexed tokenOut, uint256 amountIn, uint256 amountOut);
+    event ExchangeRateSet(
+        address indexed tokenIn,
+        address indexed tokenOut,
+        uint256 rate
+    );
+    event SwapExecuted(
+        address indexed tokenIn,
+        address indexed tokenOut,
+        uint256 amountIn,
+        uint256 amountOut
+    );
 
     /*//////////////////////////////////////////////////////////////
                                CONSTRUCTOR
@@ -45,14 +54,14 @@ contract MockUniswapV4Router is IUniswapV4Router {
                                SWAP FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
-    function exactInputSingle(ExactInputSingleParams calldata params)
-        external
-        payable
-        override
-        returns (uint256 amountOut)
-    {
+    function exactInputSingle(
+        ExactInputSingleParams calldata params
+    ) external payable override returns (uint256 amountOut) {
         require(params.amountIn > 0, "MockRouter: Amount must be > 0");
-        require(params.deadline >= block.timestamp, "MockRouter: Deadline exceeded");
+        require(
+            params.deadline >= block.timestamp,
+            "MockRouter: Deadline exceeded"
+        );
 
         // Check if swap should fail for testing
         if (globalSwapFailure || shouldFailSwap[params.tokenIn]) {
@@ -60,7 +69,10 @@ contract MockUniswapV4Router is IUniswapV4Router {
         }
 
         // Check if pool exists
-        require(poolExists[params.tokenIn][params.tokenOut], "MockRouter: Pool does not exist");
+        require(
+            poolExists[params.tokenIn][params.tokenOut],
+            "MockRouter: Pool does not exist"
+        );
 
         // Get exchange rate
         uint256 rate = exchangeRates[params.tokenIn][params.tokenOut];
@@ -73,36 +85,49 @@ contract MockUniswapV4Router is IUniswapV4Router {
         amountOut = (amountOut * (10000 - slippage)) / 10000;
 
         // Check minimum amount out
-        require(amountOut >= params.amountOutMinimum, "MockRouter: Insufficient output amount");
+        require(
+            amountOut >= params.amountOutMinimum,
+            "MockRouter: Insufficient output amount"
+        );
 
         // Transfer tokens
-        IERC20(params.tokenIn).safeTransferFrom(msg.sender, address(this), params.amountIn);
+        IERC20(params.tokenIn).safeTransferFrom(
+            msg.sender,
+            address(this),
+            params.amountIn
+        );
 
         // Mint or transfer output tokens to recipient
         _provideOutputTokens(params.tokenOut, params.recipient, amountOut);
 
-        emit SwapExecuted(params.tokenIn, params.tokenOut, params.amountIn, amountOut);
-        emit SwapExecuted(params.tokenIn, params.tokenOut, params.recipient, params.amountIn, amountOut, params.fee);
+        emit SwapExecuted(
+            params.tokenIn,
+            params.tokenOut,
+            params.amountIn,
+            amountOut
+        );
+        emit SwapExecuted(
+            params.tokenIn,
+            params.tokenOut,
+            params.recipient,
+            params.amountIn,
+            amountOut,
+            params.fee
+        );
 
         return amountOut;
     }
 
-    function exactInput(ExactInputParams calldata params)
-        external
-        payable
-        override
-        returns (uint256 amountOut)
-    {
+    function exactInput(
+        ExactInputParams calldata params
+    ) external payable override returns (uint256 amountOut) {
         // For simplicity, not implementing multi-hop swaps in mock
         revert("MockRouter: Multi-hop swaps not implemented in mock");
     }
 
-    function exactOutputSingle(ExactOutputSingleParams calldata params)
-        external
-        payable
-        override
-        returns (uint256 amountIn)
-    {
+    function exactOutputSingle(
+        ExactOutputSingleParams calldata params
+    ) external payable override returns (uint256 amountIn) {
         // For simplicity, not implementing exact output in mock
         revert("MockRouter: Exact output not implemented in mock");
     }
@@ -118,7 +143,14 @@ contract MockUniswapV4Router is IUniswapV4Router {
     ) external view override returns (address pool) {
         // Return a dummy pool address if pool exists
         if (poolExists[tokenA][tokenB] || poolExists[tokenB][tokenA]) {
-            return address(uint160(uint256(keccak256(abi.encodePacked(tokenA, tokenB, fee)))));
+            return
+                address(
+                    uint160(
+                        uint256(
+                            keccak256(abi.encodePacked(tokenA, tokenB, fee))
+                        )
+                    )
+                );
         }
         return address(0);
     }
@@ -135,15 +167,14 @@ contract MockUniswapV4Router is IUniswapV4Router {
                                MULTICALL SUPPORT
     //////////////////////////////////////////////////////////////*/
 
-    function multicall(bytes[] calldata data)
-        external
-        payable
-        override
-        returns (bytes[] memory results)
-    {
+    function multicall(
+        bytes[] calldata data
+    ) external payable override returns (bytes[] memory results) {
         results = new bytes[](data.length);
         for (uint256 i = 0; i < data.length; i++) {
-            (bool success, bytes memory result) = address(this).delegatecall(data[i]);
+            (bool success, bytes memory result) = address(this).delegatecall(
+                data[i]
+            );
             require(success, "MockRouter: Multicall failed");
             results[i] = result;
         }
@@ -166,7 +197,10 @@ contract MockUniswapV4Router is IUniswapV4Router {
         address recipient
     ) external payable override {
         uint256 balance = IERC20(token).balanceOf(address(this));
-        require(balance >= amountMinimum, "MockRouter: Insufficient token balance");
+        require(
+            balance >= amountMinimum,
+            "MockRouter: Insufficient token balance"
+        );
         IERC20(token).safeTransfer(recipient, balance);
     }
 
@@ -180,7 +214,11 @@ contract MockUniswapV4Router is IUniswapV4Router {
      * @param tokenOut Output token address
      * @param rate Exchange rate scaled by 1e18 (e.g., 2e18 = 2:1 ratio)
      */
-    function setExchangeRate(address tokenIn, address tokenOut, uint256 rate) public {
+    function setExchangeRate(
+        address tokenIn,
+        address tokenOut,
+        uint256 rate
+    ) public {
         exchangeRates[tokenIn][tokenOut] = rate;
         poolExists[tokenIn][tokenOut] = true;
         emit ExchangeRateSet(tokenIn, tokenOut, rate);
@@ -211,7 +249,11 @@ contract MockUniswapV4Router is IUniswapV4Router {
     /**
      * @dev Provide output tokens to recipient (mint if needed)
      */
-    function _provideOutputTokens(address token, address recipient, uint256 amount) internal {
+    function _provideOutputTokens(
+        address token,
+        address recipient,
+        uint256 amount
+    ) internal {
         // Try to transfer existing tokens first
         uint256 balance = IERC20(token).balanceOf(address(this));
 

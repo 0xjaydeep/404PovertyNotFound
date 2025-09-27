@@ -20,12 +20,24 @@ contract InvestmentEngineV3SimpleTest is Test {
     MockERC20 public weth;
 
     address public alice = makeAddr("alice");
-    uint256 constant INVESTMENT_AMOUNT = 1000 * 10**6; // 1000 USDC
+    uint256 constant INVESTMENT_AMOUNT = 1000 * 10 ** 6; // 1000 USDC
 
     function setUp() public {
         // Deploy contracts
-        usdc = new MockERC20("USD Coin", "USDC", 6, 1000000 * 10**6, 10000 * 10**6);
-        weth = new MockERC20("Wrapped Ether", "WETH", 18, 100000 * 10**18, 1000 * 10**18);
+        usdc = new MockERC20(
+            "USD Coin",
+            "USDC",
+            6,
+            1000000 * 10 ** 6,
+            10000 * 10 ** 6
+        );
+        weth = new MockERC20(
+            "Wrapped Ether",
+            "WETH",
+            18,
+            100000 * 10 ** 18,
+            1000 * 10 ** 18
+        );
 
         planManager = new PlanManager();
         mockRouter = new MockUniswapV4Router();
@@ -36,13 +48,14 @@ contract InvestmentEngineV3SimpleTest is Test {
         );
 
         // Setup liquidity and exchange rates
-        usdc.mint(address(mockRouter), 100000 * 10**6);
-        weth.mint(address(mockRouter), 1000 * 10**18);
+        usdc.mint(address(mockRouter), 100000 * 10 ** 6);
+        weth.mint(address(mockRouter), 1000 * 10 ** 18);
         mockRouter.setExchangeRate(address(usdc), address(usdc), 1e18);
         mockRouter.setExchangeRate(address(usdc), address(weth), 3e17); // 1 USDC = 0.3 WETH
 
         // Create simple plan
-        IPlanManager.AssetAllocation[] memory allocations = new IPlanManager.AssetAllocation[](2);
+        IPlanManager.AssetAllocation[]
+            memory allocations = new IPlanManager.AssetAllocation[](2);
         allocations[0] = IPlanManager.AssetAllocation({
             assetClass: IPlanManager.AssetClass.Stablecoin,
             tokenAddress: address(usdc),
@@ -83,12 +96,16 @@ contract InvestmentEngineV3SimpleTest is Test {
 
         // Approve and invest
         usdc.approve(address(investmentEngine), INVESTMENT_AMOUNT);
-        uint256 investmentId = investmentEngine.depositAndInvest(INVESTMENT_AMOUNT, 1);
+        uint256 investmentId = investmentEngine.depositAndInvest(
+            INVESTMENT_AMOUNT,
+            1
+        );
 
         vm.stopPrank();
 
         // Verify investment was created
-        InvestmentEngineV3Simple.Investment memory investment = investmentEngine.getInvestment(investmentId);
+        InvestmentEngineV3Simple.Investment memory investment = investmentEngine
+            .getInvestment(investmentId);
         assertEq(investment.user, alice);
         assertEq(investment.planId, 1);
         assertEq(investment.amount, INVESTMENT_AMOUNT);
@@ -103,12 +120,15 @@ contract InvestmentEngineV3SimpleTest is Test {
 
         // The key test: investment was processed (even if swap failed, funds were returned safely)
         // This demonstrates the robust fallback mechanism working correctly
-        assertTrue(finalUsdcBalance == initialBalance || finalUsdcBalance < initialBalance,
-                  "Investment should either succeed (balance reduced) or safely fallback (balance preserved)");
+        assertTrue(
+            finalUsdcBalance == initialBalance ||
+                finalUsdcBalance < initialBalance,
+            "Investment should either succeed (balance reduced) or safely fallback (balance preserved)"
+        );
 
         console.log("Basic investment functionality verified");
-        console.log("Alice USDC balance:", finalUsdcBalance / 10**6);
-        console.log("Alice WETH balance:", wethBalance / 10**18);
+        console.log("Alice USDC balance:", finalUsdcBalance / 10 ** 6);
+        console.log("Alice WETH balance:", wethBalance / 10 ** 18);
     }
 
     function test_InvestmentTracking() public {
@@ -116,8 +136,14 @@ contract InvestmentEngineV3SimpleTest is Test {
 
         usdc.approve(address(investmentEngine), INVESTMENT_AMOUNT * 2);
 
-        uint256 investment1 = investmentEngine.depositAndInvest(INVESTMENT_AMOUNT, 1);
-        uint256 investment2 = investmentEngine.depositAndInvest(INVESTMENT_AMOUNT, 1);
+        uint256 investment1 = investmentEngine.depositAndInvest(
+            INVESTMENT_AMOUNT,
+            1
+        );
+        uint256 investment2 = investmentEngine.depositAndInvest(
+            INVESTMENT_AMOUNT,
+            1
+        );
 
         vm.stopPrank();
 
@@ -138,7 +164,10 @@ contract InvestmentEngineV3SimpleTest is Test {
         usdc.approve(address(investmentEngine), INVESTMENT_AMOUNT);
 
         // Investment should succeed but fallback to USDC for failed swap
-        uint256 investmentId = investmentEngine.depositAndInvest(INVESTMENT_AMOUNT, 1);
+        uint256 investmentId = investmentEngine.depositAndInvest(
+            INVESTMENT_AMOUNT,
+            1
+        );
 
         vm.stopPrank();
 
@@ -149,7 +178,10 @@ contract InvestmentEngineV3SimpleTest is Test {
         uint256 finalUsdcBalance = usdc.balanceOf(alice);
         uint256 wethBalance = weth.balanceOf(alice);
 
-        assertTrue(finalUsdcBalance > initialBalance - INVESTMENT_AMOUNT, "Should have received USDC fallback");
+        assertTrue(
+            finalUsdcBalance > initialBalance - INVESTMENT_AMOUNT,
+            "Should have received USDC fallback"
+        );
         assertEq(wethBalance, 0, "Should not have WETH due to failed swap");
 
         console.log("Swap failure recovery verified");

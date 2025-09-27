@@ -62,11 +62,7 @@ contract InvestmentEngineV3Simple {
                                CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/
 
-    constructor(
-        address _planManager,
-        address _router,
-        address _baseToken
-    ) {
+    constructor(address _planManager, address _router, address _baseToken) {
         owner = msg.sender;
         planManager = _planManager;
         router = IUniswapV4Router(_router);
@@ -90,7 +86,8 @@ contract InvestmentEngineV3Simple {
         require(amount > 0, "Amount must be > 0");
 
         // Get plan details
-        IPlanManager.InvestmentPlan memory plan = IPlanManager(planManager).getPlan(planId);
+        IPlanManager.InvestmentPlan memory plan = IPlanManager(planManager)
+            .getPlan(planId);
         require(plan.isActive, "Plan not active");
 
         // Transfer base tokens from user
@@ -108,13 +105,19 @@ contract InvestmentEngineV3Simple {
 
         // Execute swaps for each allocation
         for (uint256 i = 0; i < plan.allocations.length; i++) {
-            IPlanManager.AssetAllocation memory allocation = plan.allocations[i];
-            uint256 allocationAmount = (amount * allocation.targetPercentage) / 10000;
+            IPlanManager.AssetAllocation memory allocation = plan.allocations[
+                i
+            ];
+            uint256 allocationAmount = (amount * allocation.targetPercentage) /
+                10000;
 
             if (allocationAmount > 0) {
                 if (allocation.tokenAddress == baseToken) {
                     // Direct transfer for base token
-                    IERC20(baseToken).safeTransfer(msg.sender, allocationAmount);
+                    IERC20(baseToken).safeTransfer(
+                        msg.sender,
+                        allocationAmount
+                    );
                 } else {
                     // Swap via Uniswap V4
                     _swapToken(allocation.tokenAddress, allocationAmount);
@@ -157,7 +160,13 @@ contract InvestmentEngineV3Simple {
 
         // Execute swap
         try router.exactInputSingle(params) returns (uint256 amountOut) {
-            emit TokenSwapped(msg.sender, baseToken, tokenOut, amountIn, amountOut);
+            emit TokenSwapped(
+                msg.sender,
+                baseToken,
+                tokenOut,
+                amountIn,
+                amountOut
+            );
         } catch {
             // On failure, send base tokens to user
             IERC20(baseToken).safeTransfer(msg.sender, amountIn);
@@ -168,7 +177,9 @@ contract InvestmentEngineV3Simple {
                                VIEW FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
-    function getInvestment(uint256 investmentId) external view returns (Investment memory) {
+    function getInvestment(
+        uint256 investmentId
+    ) external view returns (Investment memory) {
         return investments[investmentId];
     }
 
