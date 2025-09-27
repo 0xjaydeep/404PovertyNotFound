@@ -63,15 +63,15 @@ library UniswapV4Utils {
      * @return tickSpacing The tick spacing
      */
     function getTickSpacing(uint24 fee) internal pure returns (int24 tickSpacing) {
-        if (fee == IUniswapV4Core.FEE_LOW) {
-            return IUniswapV4Core.TICK_SPACING_LOW;
-        } else if (fee == IUniswapV4Core.FEE_MEDIUM) {
-            return IUniswapV4Core.TICK_SPACING_MEDIUM;
-        } else if (fee == IUniswapV4Core.FEE_HIGH) {
-            return IUniswapV4Core.TICK_SPACING_HIGH;
+        if (fee == 500) { // FEE_LOW
+            return 10; // TICK_SPACING_LOW
+        } else if (fee == 3000) { // FEE_MEDIUM
+            return 60; // TICK_SPACING_MEDIUM
+        } else if (fee == 10000) { // FEE_HIGH
+            return 200; // TICK_SPACING_HIGH
         } else {
             // For custom fees, use medium spacing as default
-            return IUniswapV4Core.TICK_SPACING_MEDIUM;
+            return 60; // TICK_SPACING_MEDIUM
         }
     }
 
@@ -151,10 +151,10 @@ library UniswapV4Utils {
      * @return isValid True if the fee is valid
      */
     function isValidFee(uint24 fee) internal pure returns (bool isValid) {
-        return fee == IUniswapV4Core.FEE_LOW ||
-               fee == IUniswapV4Core.FEE_MEDIUM ||
-               fee == IUniswapV4Core.FEE_HIGH ||
-               (fee <= IUniswapV4Core.MAX_FEE && fee > 0);
+        return fee == 500 || // FEE_LOW
+               fee == 3000 || // FEE_MEDIUM
+               fee == 10000 || // FEE_HIGH
+               (fee <= 1000000 && fee > 0); // MAX_FEE = 100%
     }
 
     /**
@@ -170,8 +170,8 @@ library UniswapV4Utils {
         int24 tickSpacing
     ) internal pure returns (bool isValid) {
         return tickLower < tickUpper &&
-               tickLower >= IUniswapV4Core.MIN_TICK &&
-               tickUpper <= IUniswapV4Core.MAX_TICK &&
+               tickLower >= -887272 && // MIN_TICK
+               tickUpper <= 887272 && // MAX_TICK
                tickLower % tickSpacing == 0 &&
                tickUpper % tickSpacing == 0;
     }

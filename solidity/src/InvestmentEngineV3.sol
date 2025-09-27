@@ -140,7 +140,7 @@ contract InvestmentEngineV3Simple {
         uint256 minAmountOut = (amountIn * (10000 - slippage)) / 10000;
 
         // Approve router
-        IERC20(baseToken).safeApprove(address(router), amountIn);
+        IERC20(baseToken).approve(address(router), amountIn);
 
         // Prepare swap params
         IUniswapV4Router.ExactInputSingleParams memory params = IUniswapV4Router

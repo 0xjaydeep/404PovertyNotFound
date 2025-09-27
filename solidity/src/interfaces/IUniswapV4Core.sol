@@ -96,34 +96,7 @@ interface IUniswapV4Core {
                                FEE TYPES
     //////////////////////////////////////////////////////////////*/
 
-    /**
-     * @dev Standard fee tiers
-     */
-    uint24 constant FEE_LOW = 500;      // 0.05%
-    uint24 constant FEE_MEDIUM = 3000;  // 0.3%
-    uint24 constant FEE_HIGH = 10000;   // 1.0%
-
-    /**
-     * @dev Maximum fee that can be charged
-     */
-    uint24 constant MAX_FEE = 1000000;  // 100%
-
-    /*//////////////////////////////////////////////////////////////
-                               TICK TYPES
-    //////////////////////////////////////////////////////////////*/
-
-    /**
-     * @dev Tick spacing for different fee tiers
-     */
-    int24 constant TICK_SPACING_LOW = 10;     // For 0.05% fee
-    int24 constant TICK_SPACING_MEDIUM = 60;  // For 0.3% fee
-    int24 constant TICK_SPACING_HIGH = 200;   // For 1.0% fee
-
-    /**
-     * @dev Minimum and maximum tick values
-     */
-    int24 constant MIN_TICK = -887272;
-    int24 constant MAX_TICK = 887272;
+    // Note: Constants moved to library due to interface limitations
 
     /*//////////////////////////////////////////////////////////////
                                HELPER FUNCTIONS

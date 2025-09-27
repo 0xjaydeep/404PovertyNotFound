@@ -121,7 +121,7 @@ interface IUniswapV4Router {
      * @param fee Pool fee tier
      * @return exists True if pool exists
      */
-    function poolExists(
+    function poolExistsView(
         address tokenA,
         address tokenB,
         uint24 fee
