@@ -1,15 +1,227 @@
-# Remix compiler artifacts
+# =============================================================================
+# 404 POVERTY NOT FOUND - COMPREHENSIVE .GITIGNORE
+# =============================================================================
+
+# =============================================================================
+# ENVIRONMENT & SECRETS
+# =============================================================================
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.env.staging
+*.pem
+*.key
+*.p12
+*.pfx
+
+# =============================================================================
+# FOUNDRY/SOLIDITY BUILD ARTIFACTS
+# =============================================================================
+# Foundry cache and build outputs
+cache/
+out/
+artifacts/
 **/artifacts/
 **/artifacts/**
 
-# Remix plugin state folders
+# Foundry broadcast logs (keep structure, ignore local runs)
+broadcast/*/31337/
+broadcast/**/dry-run/
+
+# Solidity compiler artifacts
+*.sol.artifacts
+*.sol.cache
+
+# =============================================================================
+# NODE.JS/NPM
+# =============================================================================
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json.bak
+yarn.lock.bak
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+.nyc_output/
+
+# Logs
+logs/
+*.log
+lerna-debug.log*
+
+# Build outputs
+dist/
+build/
+.next/
+.nuxt/
+.vuepress/dist/
+
+# =============================================================================
+# DEVELOPMENT TOOLS
+# =============================================================================
+# TypeScript
+*.tsbuildinfo
+.tscache/
+
+# ESLint
+.eslintcache
+
+# Jest
+.jest/
+
+# Testing
+test-results/
+playwright-report/
+coverage.json
+
+# Debugging
+*.dbg.json
+.vscode-test/
+
+# =============================================================================
+# REMIX IDE (Legacy)
+# =============================================================================
+# Remix compiler artifacts (legacy support)
 deps/
 states/
 
-# Debug info
-*.dbg.json
-*.tsbuildinfo
+# =============================================================================
+# CLAUDE CODE
+# =============================================================================
+.claude/
+**/.claude/
 
-# Optional
-.env
-.env.local
+# =============================================================================
+# OPERATING SYSTEM
+# =============================================================================
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# =============================================================================
+# EDITORS & IDEs
+# =============================================================================
+# VSCode
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# JetBrains IDEs
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Vim/Neovim
+*.swp
+*.swo
+*~
+.vimrc.local
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+# =============================================================================
+# BLOCKCHAIN SPECIFIC
+# =============================================================================
+# Private keys and mnemonics
+mnemonic.txt
+private_keys/
+keystore/
+**/accounts.json
+
+# Network configuration
+networks.json
+
+# =============================================================================
+# DOCUMENTATION & TEMPORARY
+# =============================================================================
+# Documentation builds
+docs/build/
+docs/_build/
+site/
+
+# Temporary files
+*.tmp
+*.temp
+*.cache
+.cache/
+
+# Backup files
+*.bak
+*.backup
+*.orig
+
+# =============================================================================
+# DEPLOYMENT & CI/CD
+# =============================================================================
+# Vercel
+.vercel/
+
+# Netlify
+.netlify/
+
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+
+# AWS
+.aws/
+
+# =============================================================================
+# MISC
+# =============================================================================
+# Runtime
+.runtime/
+
+# Metrics and analytics
+.metrics/
+analytics/
+
+# User uploads (if any)
+uploads/
+user-data/

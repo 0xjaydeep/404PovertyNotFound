@@ -89,10 +89,17 @@ contract InvestmentEngine is IInvestmentEngine {
         uint256 amount
     ) external returns (uint256 investmentId) {
         require(amount > 0, "Investment amount must be greater than 0");
+        require(planManager != address(0), "Plan manager not set");
         require(
             _userBalances[msg.sender].availableBalance >= amount,
             "Insufficient balance"
         );
+
+        // Validate that the plan exists and is active
+        IPlanManager planManagerContract = IPlanManager(planManager);
+        IPlanManager.InvestmentPlan memory plan = planManagerContract.getPlan(planId);
+        require(plan.planId == planId, "Plan does not exist");
+        require(plan.isActive, "Plan is not active");
 
         _investmentCounter++;
         investmentId = _investmentCounter;
