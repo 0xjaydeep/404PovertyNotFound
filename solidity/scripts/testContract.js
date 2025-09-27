@@ -3,7 +3,7 @@
 const { ethers } = require("ethers");
 const { HermesClient } = require("@pythnetwork/hermes-client");
 
-// Configuration for Unichain Sepolia
+//       console.log(`💲 Fresh AAPL/USD Price: $${freshPriceValue.toFixed(2)}`);onfiguration for Unichain Sepolia
 const CONTRACT_ADDRESS = "0x5c29bc86f34505f20a23CB1501E010c52e6C41Ac";
 const PYTH_HERMES_URL = "https://hermes.pyth.network";
 const UNICHAIN_SEPOLIA_RPC = "https://sepolia.unichain.org";
@@ -86,25 +86,58 @@ async function testUnichainContract() {
     console.log(`🔗 Transaction hash: ${receipt.hash}`);
     console.log(`⛽ Gas used: ${receipt.gasUsed.toString()}\n`);
 
-    // Step 4: Read cached price (no gas cost)
-    console.log("📋 Reading cached ETH price...");
-    const cachedPrice = await contract.getCachedPrice(ETH_USD_FEED_ID);
+    // Step 4: Read both cached and fresh price
+    console.log("📋 Reading cached AAPL price (unsafe)...");
+    const cachedPrice = await contract.getCachedPrice(AAPL_USD_FEED_ID);
 
     // Pyth prices are scaled by 10^expo
-    const priceValue =
+    const cachedPriceValue =
       Number(cachedPrice.price) * Math.pow(10, Number(cachedPrice.expo));
-    const confValue =
+    const cachedConfValue =
       Number(cachedPrice.conf) * Math.pow(10, Number(cachedPrice.expo));
 
-    console.log(`💲 ETH/USD Price: $${priceValue.toFixed(2)}`);
+    console.log(`💲 Cached AAPL/USD Price: $${cachedPriceValue.toFixed(2)}`);
     console.log(
-      `📅 Last Updated: ${new Date(
+      `📅 Cached Last Updated: ${new Date(
         Number(cachedPrice.publishTime) * 1000
       ).toISOString()}`
     );
-    console.log(`🎯 Confidence: ±${confValue.toFixed(2)}`);
-    console.log(`🔢 Raw price: ${cachedPrice.price.toString()}`);
-    console.log(`🔢 Exponent: ${cachedPrice.expo.toString()}\n`);
+    console.log(`🎯 Cached Confidence: ±${cachedConfValue.toFixed(2)}`);
+
+    // Now try to get fresh price (will work only if recent)
+    console.log("\n� Attempting to read fresh price (max 60 seconds old)...");
+    try {
+      // This calls the Pyth contract directly for fresh price
+      const pythContract = new ethers.Contract(
+        "0x2880aB155794e7179c9eE2e38200202908C17B43", // Pyth contract address on Unichain Sepolia
+        [
+          "function getPriceNoOlderThan(bytes32 id, uint age) view returns (tuple(int64 price, uint64 conf, int32 expo, uint publishTime))",
+        ],
+        provider
+      );
+
+      const freshPrice = await pythContract.getPriceNoOlderThan(
+        AAPL_USD_FEED_ID,
+        60
+      );
+      const freshPriceValue =
+        Number(freshPrice.price) * Math.pow(10, Number(freshPrice.expo));
+      const freshConfValue =
+        Number(freshPrice.conf) * Math.pow(10, Number(freshPrice.expo));
+
+      console.log(`� Fresh ETH/USD Price: $${freshPriceValue.toFixed(2)}`);
+      console.log(
+        `📅 Fresh Last Updated: ${new Date(
+          Number(freshPrice.publishTime) * 1000
+        ).toISOString()}`
+      );
+      console.log(`🎯 Fresh Confidence: ±${freshConfValue.toFixed(2)}`);
+    } catch (error) {
+      console.log(`⚠️  Fresh price not available: ${error.message}`);
+      console.log(
+        `ℹ️  This means the last price update was more than 60 seconds ago`
+      );
+    }
 
     console.log("🎉 Unichain Sepolia test completed successfully!");
     console.log("🦄 Your Pyth Oracle is now live on Unichain!");
