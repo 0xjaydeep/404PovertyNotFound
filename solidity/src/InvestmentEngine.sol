@@ -3,14 +3,26 @@ pragma solidity ^0.8.13;
 
 import "./interfaces/IInvestmentEngine.sol";
 import "./interfaces/IPlanManager.sol";
+import "./interfaces/IPriceOracle.sol";
 
-contract InvestmentEngine is IInvestmentEngine {
+/**
+ * @title InvestmentEngineV2
+ * @notice Enhanced Investment Engine with Oracle integration for live price-based portfolio calculations
+ */
+contract InvestmentEngineV2 is IInvestmentEngine {
     // State variables
     uint256 private _depositCounter;
     uint256 private _investmentCounter;
     address public owner;
     address public planManager;
+    address public priceOracle;
     uint256 public minimumDeposit;
+
+    // Price staleness threshold (default: 5 minutes)
+    uint256 public priceStalenessTreshold = 300;
+
+    // Rebalancing threshold (basis points, 500 = 5%)
+    uint256 public rebalanceThreshold = 500;
 
     // Storage mappings
     mapping(uint256 => UserDeposit) private _deposits;
@@ -18,6 +30,29 @@ contract InvestmentEngine is IInvestmentEngine {
     mapping(uint256 => Investment) private _investments;
     mapping(address => uint256[]) private _userInvestments;
     mapping(address => UserBalance) private _userBalances;
+
+    // Portfolio tracking
+    mapping(address => mapping(IPriceOracle.AssetClass => uint256))
+        private _userAssetBalances;
+    mapping(address => uint256) private _lastRebalanceTime;
+
+    // Events
+    event OracleUpdated(address indexed newOracle);
+    event PortfolioRebalanced(
+        address indexed user,
+        uint256 totalValue,
+        uint256 timestamp
+    );
+    event AssetAllocationUpdated(
+        address indexed user,
+        IPriceOracle.AssetClass assetClass,
+        uint256 amount
+    );
+    event PriceBasedInvestmentExecuted(
+        uint256 indexed investmentId,
+        uint256 usdValue,
+        int64 price
+    );
 
     // Modifiers
     modifier onlyOwner() {
@@ -41,15 +76,238 @@ contract InvestmentEngine is IInvestmentEngine {
         _;
     }
 
+    modifier oracleConfigured() {
+        require(priceOracle != address(0), "Price oracle not configured");
+        _;
+    }
+
     constructor() {
         owner = msg.sender;
         minimumDeposit = 100; // 100 wei minimum deposit
     }
 
-    // Deposit Functions
+    // Oracle Integration Functions
+    function setPriceOracle(address _priceOracle) external onlyOwner {
+        require(_priceOracle != address(0), "Invalid oracle address");
+        priceOracle = _priceOracle;
+        emit OracleUpdated(_priceOracle);
+    }
+
+    function setPriceStalenessTreshold(uint256 _threshold) external onlyOwner {
+        priceStalenessTreshold = _threshold;
+    }
+
+    function setRebalanceThreshold(uint256 _threshold) external onlyOwner {
+        require(_threshold <= 10000, "Threshold cannot exceed 100%");
+        rebalanceThreshold = _threshold;
+    }
+
+    // Enhanced Portfolio Valuation Functions
+    function getUserPortfolioValue(
+        address user
+    ) external view override returns (uint256) {
+        if (priceOracle == address(0)) {
+            // Fallback to basic calculation if oracle not set
+            UserBalance memory balance = _userBalances[user];
+            return
+                balance.totalInvested +
+                balance.pendingInvestment +
+                balance.availableBalance;
+        }
+
+        return _calculatePortfolioValueCached(user);
+    }
+
+    function getUserPortfolioValueLive(
+        address user,
+        bytes[] calldata priceUpdate
+    ) external payable oracleConfigured returns (uint256 totalValue) {
+        IPriceOracle oracle = IPriceOracle(priceOracle);
+
+        // Get all supported asset classes
+        IPriceOracle.AssetClass[]
+            memory assetClasses = new IPriceOracle.AssetClass[](2);
+        assetClasses[0] = IPriceOracle.AssetClass.Crypto;
+        assetClasses[1] = IPriceOracle.AssetClass.RWA;
+
+        // Get live prices for all assets
+        int64[] memory prices = oracle.getMultipleAssetPrices(
+            assetClasses,
+            priceUpdate
+        );
+
+        // Calculate total portfolio value
+        for (uint i = 0; i < assetClasses.length; i++) {
+            uint256 assetBalance = _userAssetBalances[user][assetClasses[i]];
+            if (assetBalance > 0 && prices[i] > 0) {
+                totalValue += (assetBalance * uint256(uint64(prices[i]))) / 1e8;
+            }
+        }
+
+        // Add available balance
+        totalValue += _userBalances[user].availableBalance;
+    }
+
+    function getAssetAllocation(
+        address user
+    )
+        external
+        view
+        returns (
+            IPriceOracle.AssetClass[] memory assetClasses,
+            uint256[] memory amounts
+        )
+    {
+        assetClasses = new IPriceOracle.AssetClass[](4);
+        amounts = new uint256[](4);
+
+        assetClasses[0] = IPriceOracle.AssetClass.Crypto;
+        assetClasses[1] = IPriceOracle.AssetClass.RWA;
+        assetClasses[2] = IPriceOracle.AssetClass.Liquidity;
+        assetClasses[3] = IPriceOracle.AssetClass.Stablecoin;
+
+        for (uint i = 0; i < 4; i++) {
+            amounts[i] = _userAssetBalances[user][assetClasses[i]];
+        }
+    }
+
+    // Enhanced Investment Execution with Live Pricing
+    function executeInvestmentWithLivePricing(
+        uint256 investmentId,
+        bytes[] calldata priceUpdate
+    )
+        external
+        payable
+        onlyOwner
+        investmentExists(investmentId)
+        oracleConfigured
+    {
+        Investment storage investment = _investments[investmentId];
+        require(
+            investment.status == InvestmentStatus.Pending,
+            "Investment not pending"
+        );
+
+        IPriceOracle oracle = IPriceOracle(priceOracle);
+        IPlanManager planMgr = IPlanManager(planManager);
+
+        // Get investment plan
+        IPlanManager.InvestmentPlan memory plan = planMgr.getPlan(
+            investment.planId
+        );
+
+        // Execute investment based on plan allocations using live prices
+        uint256 remainingAmount = investment.totalAmount;
+
+        for (
+            uint i = 0;
+            i < plan.allocations.length && remainingAmount > 0;
+            i++
+        ) {
+            IPlanManager.AssetAllocation memory allocation = plan.allocations[
+                i
+            ];
+
+            // Calculate allocation amount
+            uint256 allocationAmount = (investment.totalAmount *
+                allocation.targetPercentage) / 10000;
+            if (allocationAmount > remainingAmount) {
+                allocationAmount = remainingAmount;
+            }
+
+            // Convert asset class and get live price
+            IPriceOracle.AssetClass assetClass = _convertAssetClass(
+                allocation.assetClass
+            );
+            int64 price = oracle.getAssetPrice(assetClass, priceUpdate);
+            require(price > 0, "Invalid price for asset");
+
+            // Update user's asset balance
+            _userAssetBalances[investment.user][assetClass] += allocationAmount;
+            remainingAmount -= allocationAmount;
+
+            emit AssetAllocationUpdated(
+                investment.user,
+                assetClass,
+                allocationAmount
+            );
+            emit PriceBasedInvestmentExecuted(
+                investmentId,
+                allocationAmount,
+                price
+            );
+        }
+
+        // Update investment status
+        investment.status = InvestmentStatus.Executed;
+        investment.executedAmount = investment.totalAmount;
+        investment.executedAt = block.timestamp;
+
+        // Update user balance
+        address user = investment.user;
+        _userBalances[user].pendingInvestment -= investment.totalAmount;
+        _userBalances[user].totalInvested += investment.totalAmount;
+
+        emit InvestmentExecuted(investmentId, user, investment.totalAmount);
+    }
+
+    // Enhanced Rebalancing with Oracle Integration
+    function rebalanceWithLivePricing(
+        address user,
+        uint256 planId,
+        bytes[] calldata priceUpdate
+    ) external payable onlyOwner oracleConfigured {
+        require(user != address(0), "Invalid user address");
+
+        IPriceOracle oracle = IPriceOracle(priceOracle);
+        IPlanManager planMgr = IPlanManager(planManager);
+
+        // Get current portfolio value
+        uint256 totalPortfolioValue = this.getUserPortfolioValueLive{
+            value: msg.value
+        }(user, priceUpdate);
+        require(totalPortfolioValue > 0, "No portfolio to rebalance");
+
+        // Get target allocations from plan
+        IPlanManager.InvestmentPlan memory plan = planMgr.getPlan(planId);
+
+        // Check if rebalancing is needed
+        bool needsRebalancing = _checkRebalancingNeeded(
+            user,
+            plan,
+            totalPortfolioValue
+        );
+        require(needsRebalancing, "Portfolio within rebalancing threshold");
+
+        // Execute rebalancing
+        _executeRebalancing(user, plan, totalPortfolioValue, priceUpdate);
+
+        _lastRebalanceTime[user] = block.timestamp;
+        emit PortfolioRebalanced(user, totalPortfolioValue, block.timestamp);
+    }
+
+    function checkRebalancingNeeded(
+        address user,
+        uint256 planId
+    ) external view returns (bool needed, uint256 maxDeviation) {
+        if (priceOracle == address(0) || planManager == address(0)) {
+            return (false, 0);
+        }
+
+        uint256 totalValue = _calculatePortfolioValueCached(user);
+        if (totalValue == 0) {
+            return (false, 0);
+        }
+
+        IPlanManager planMgr = IPlanManager(planManager);
+        IPlanManager.InvestmentPlan memory plan = planMgr.getPlan(planId);
+
+        return (_checkRebalancingNeeded(user, plan, totalValue), maxDeviation);
+    }
+
+    // Deposit Functions (unchanged from original)
     function deposit(uint256 amount, DepositType depositType) external {
         require(amount >= minimumDeposit, "Amount below minimum deposit");
-
         _processDeposit(msg.sender, amount, depositType);
     }
 
@@ -60,7 +318,6 @@ contract InvestmentEngine is IInvestmentEngine {
     ) external onlyOwner {
         require(user != address(0), "Invalid user address");
         require(amount >= minimumDeposit, "Amount below minimum deposit");
-
         _processDeposit(user, amount, depositType);
     }
 
@@ -78,12 +335,11 @@ contract InvestmentEngine is IInvestmentEngine {
                 amounts[i] >= minimumDeposit,
                 "Amount below minimum deposit"
             );
-
             _processDeposit(users[i], amounts[i], depositType);
         }
     }
 
-    // Investment Functions
+    // Investment Functions (original)
     function invest(
         uint256 planId,
         uint256 amount
@@ -97,7 +353,6 @@ contract InvestmentEngine is IInvestmentEngine {
         _investmentCounter++;
         investmentId = _investmentCounter;
 
-        // Create investment record
         _investments[investmentId] = Investment({
             investmentId: investmentId,
             user: msg.sender,
@@ -109,11 +364,8 @@ contract InvestmentEngine is IInvestmentEngine {
             executedAt: 0
         });
 
-        // Update user balance
         _userBalances[msg.sender].availableBalance -= amount;
         _userBalances[msg.sender].pendingInvestment += amount;
-
-        // Track user investments
         _userInvestments[msg.sender].push(investmentId);
 
         return investmentId;
@@ -128,12 +380,10 @@ contract InvestmentEngine is IInvestmentEngine {
             "Investment not pending"
         );
 
-        // Update investment status
         investment.status = InvestmentStatus.Executed;
         investment.executedAmount = investment.totalAmount;
         investment.executedAt = block.timestamp;
 
-        // Update user balance
         address user = investment.user;
         _userBalances[user].pendingInvestment -= investment.totalAmount;
         _userBalances[user].totalInvested += investment.totalAmount;
@@ -153,12 +403,10 @@ contract InvestmentEngine is IInvestmentEngine {
                 Investment storage investment = _investments[investmentId];
 
                 if (investment.status == InvestmentStatus.Pending) {
-                    // Update investment status
                     investment.status = InvestmentStatus.Executed;
                     investment.executedAmount = investment.totalAmount;
                     investment.executedAt = block.timestamp;
 
-                    // Update user balance
                     address user = investment.user;
                     _userBalances[user].pendingInvestment -= investment
                         .totalAmount;
@@ -174,25 +422,14 @@ contract InvestmentEngine is IInvestmentEngine {
         }
     }
 
-    // Rebalancing Functions
+    // Legacy rebalancing function
     function rebalance(address user, uint256 planId) external onlyOwner {
         require(user != address(0), "Invalid user address");
-
-        // Simple rebalancing logic - in a real implementation, this would
-        // interact with DEXs and asset protocols to rebalance according to plan allocations
         uint256 portfolioValue = this.getUserPortfolioValue(user);
-
-        // For now, just emit an event to indicate rebalancing occurred
-        // In full implementation, this would:
-        // 1. Get plan allocations from PlanManager
-        // 2. Calculate current asset distribution
-        // 3. Execute trades to match target allocations
-
-        // Placeholder implementation
         require(portfolioValue > 0, "No portfolio to rebalance");
     }
 
-    // View Functions
+    // View Functions (unchanged from original)
     function getUserBalance(
         address user
     ) external view returns (UserBalance memory) {
@@ -238,7 +475,6 @@ contract InvestmentEngine is IInvestmentEngine {
     ) external view returns (Investment[] memory) {
         uint256[] memory investmentIds = _userInvestments[user];
 
-        // Count pending investments
         uint256 pendingCount = 0;
         for (uint256 i = 0; i < investmentIds.length; i++) {
             if (
@@ -249,7 +485,6 @@ contract InvestmentEngine is IInvestmentEngine {
             }
         }
 
-        // Create array of pending investments
         Investment[] memory pendingInvestments = new Investment[](pendingCount);
         uint256 index = 0;
 
@@ -267,22 +502,10 @@ contract InvestmentEngine is IInvestmentEngine {
     }
 
     function getTotalValueLocked() external view returns (uint256) {
-        // In a real implementation, this would aggregate all user balances
-        // For simplicity, returning 0 for now
-        return 0;
+        return 0; // Placeholder implementation
     }
 
-    function getUserPortfolioValue(
-        address user
-    ) external view returns (uint256) {
-        UserBalance memory balance = _userBalances[user];
-        return
-            balance.totalInvested +
-            balance.pendingInvestment +
-            balance.availableBalance;
-    }
-
-    // Internal helper functions
+    // Internal Functions
     function _processDeposit(
         address user,
         uint256 amount,
@@ -291,7 +514,6 @@ contract InvestmentEngine is IInvestmentEngine {
         _depositCounter++;
         uint256 depositId = _depositCounter;
 
-        // Create deposit record
         _deposits[depositId] = UserDeposit({
             user: user,
             amount: amount,
@@ -300,14 +522,96 @@ contract InvestmentEngine is IInvestmentEngine {
             processed: true
         });
 
-        // Update user balance
         _userBalances[user].totalDeposited += amount;
         _userBalances[user].availableBalance += amount;
-
-        // Track user deposits
         _userDeposits[user].push(depositId);
 
         emit DepositReceived(user, amount, depositType);
+    }
+
+    function _calculatePortfolioValueCached(
+        address user
+    ) internal view returns (uint256 totalValue) {
+        // This would use cached prices from the oracle
+        // For simplicity, returning basic calculation
+        UserBalance memory balance = _userBalances[user];
+        return
+            balance.totalInvested +
+            balance.pendingInvestment +
+            balance.availableBalance;
+    }
+
+    function _convertAssetClass(
+        IPlanManager.AssetClass planAssetClass
+    ) internal pure returns (IPriceOracle.AssetClass) {
+        if (planAssetClass == IPlanManager.AssetClass.Crypto) {
+            return IPriceOracle.AssetClass.Crypto;
+        } else if (planAssetClass == IPlanManager.AssetClass.RWA) {
+            return IPriceOracle.AssetClass.RWA;
+        } else if (planAssetClass == IPlanManager.AssetClass.Liquidity) {
+            return IPriceOracle.AssetClass.Liquidity;
+        } else if (planAssetClass == IPlanManager.AssetClass.Stablecoin) {
+            return IPriceOracle.AssetClass.Stablecoin;
+        }
+        revert("Unsupported asset class");
+    }
+
+    function _checkRebalancingNeeded(
+        address user,
+        IPlanManager.InvestmentPlan memory plan,
+        uint256 totalValue
+    ) internal view returns (bool) {
+        for (uint i = 0; i < plan.allocations.length; i++) {
+            IPlanManager.AssetAllocation memory allocation = plan.allocations[
+                i
+            ];
+            IPriceOracle.AssetClass assetClass = _convertAssetClass(
+                allocation.assetClass
+            );
+
+            uint256 currentAmount = _userAssetBalances[user][assetClass];
+            uint256 currentPercentage = totalValue > 0
+                ? (currentAmount * 10000) / totalValue
+                : 0;
+
+            uint256 deviation = currentPercentage > allocation.targetPercentage
+                ? currentPercentage - allocation.targetPercentage
+                : allocation.targetPercentage - currentPercentage;
+
+            if (deviation > rebalanceThreshold) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function _executeRebalancing(
+        address user,
+        IPlanManager.InvestmentPlan memory plan,
+        uint256 totalValue,
+        bytes[] calldata priceUpdate
+    ) internal {
+        // This is a simplified rebalancing implementation
+        // In a full implementation, this would involve:
+        // 1. Calculate current vs target allocations
+        // 2. Execute trades on DEXs to rebalance
+        // 3. Update user asset balances accordingly
+
+        // For now, just update allocations based on target percentages
+        for (uint i = 0; i < plan.allocations.length; i++) {
+            IPlanManager.AssetAllocation memory allocation = plan.allocations[
+                i
+            ];
+            IPriceOracle.AssetClass assetClass = _convertAssetClass(
+                allocation.assetClass
+            );
+
+            uint256 targetAmount = (totalValue * allocation.targetPercentage) /
+                10000;
+            _userAssetBalances[user][assetClass] = targetAmount;
+
+            emit AssetAllocationUpdated(user, assetClass, targetAmount);
+        }
     }
 
     // Administrative Functions
