@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "forge-std/Script.sol";
-import "../src/SimpleOracleStandalone.sol";
+import "../src/pyth/Oracle.sol";
 
 contract DeploySimpleOracleUnichain is Script {
     // Pyth contract address for Unichain Sepolia testnet
