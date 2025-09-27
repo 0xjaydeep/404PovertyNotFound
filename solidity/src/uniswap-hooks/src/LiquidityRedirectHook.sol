@@ -101,18 +101,16 @@ contract LiquidityRedirectHook is BaseHook {
         uint128 amount0 = d0 > 0 ? uint128(d0) / 2 : 0; // Use 50% of what was received
         uint128 amount1 = d1 > 0 ? uint128(d1) / 2 : 0;
 
-        // Only proceed if we have received both tokens
-        if (amount0 == 0 || amount1 == 0) return; // @DEV will be changed later
-
-        // Get the current price of the *target* pool to create a tight liquidity range
+        // Get the current price of the *target* pool to create an appropriate liquidity range
         (uint160 sqrtPriceX96, , , ) = poolManager.getSlot0(targetPool.toId());
         int24 currentTick = TickMath.getTickAtSqrtPrice(sqrtPriceX96);
 
-        // Define a narrow range around the current price, e.g., 10 ticks wide
+        // Define a range around the current price that's wide enough to accommodate price movement
         int24 tickSpacing = targetPool.tickSpacing;
-        int24 tickLower = ((currentTick - 5 * tickSpacing) / tickSpacing) *
+        // Use a wider range (±50 ticks) for more stable pools like ETH/WBTC
+        int24 tickLower = ((currentTick - 50 * tickSpacing) / tickSpacing) *
             tickSpacing;
-        int24 tickUpper = ((currentTick + 5 * tickSpacing) / tickSpacing) *
+        int24 tickUpper = ((currentTick + 50 * tickSpacing) / tickSpacing) *
             tickSpacing;
 
         // Convert our token amounts into a liquidity amount for the target pool

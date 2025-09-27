@@ -68,19 +68,18 @@ contract DeployHookScript is BaseScript {
     }
 
     // helper function to sort target tokens
-
-    function getCurrencies() public pure returns (Currency, Currency) {
-        require(address(token0) != address(token1));
+    function getCurrencies(address token0, address token1) public pure returns (Currency, Currency) {
+        require(token0 != token1, "Same token addresses");
 
         if (token0 < token1) {
             return (
-                Currency.wrap(address(token0)),
-                Currency.wrap(address(token1))
+                Currency.wrap(token0),
+                Currency.wrap(token1)
             );
         } else {
             return (
-                Currency.wrap(address(token1)),
-                Currency.wrap(address(token0))
+                Currency.wrap(token1),
+                Currency.wrap(token0)
             );
         }
     }

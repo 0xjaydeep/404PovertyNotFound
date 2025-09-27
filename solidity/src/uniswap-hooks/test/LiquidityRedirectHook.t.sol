@@ -190,4 +190,78 @@ contract LiquidityRedirectHookTest is Test, Deployers {
             "Hook liquidity in target pool should increase after adding more liquidity"
         );
     }
+
+    /// @notice Test a large imbalanced swap to ensure hook handles edge cases
+    function test_LargeImbalancedSwap() public {
+        // --- ARRANGE ---
+        uint256 liquidityBefore = poolManager.getLiquidity(
+            targetPoolId,
+            address(hook),
+            -887220,
+            887220
+        );
+
+        // --- ACT ---
+        // Perform a large swap that will move the price significantly
+        swapRouter.swapExactTokensForTokens({
+            amountIn: 1000 ether, // Large amount
+            amountOutMin: 0,
+            zeroForOne: true,
+            poolKey: homePoolKey,
+            hookData: Constants.ZERO_BYTES,
+            receiver: address(this),
+            deadline: block.timestamp
+        });
+
+        // --- ASSERT ---
+        uint256 liquidityAfter = poolManager.getLiquidity(
+            targetPoolId,
+            address(hook),
+            -887220,
+            887220
+        );
+        assertGt(
+            liquidityAfter,
+            liquidityBefore,
+            "Hook should still invest after large imbalanced swap"
+        );
+    }
+
+    /// @notice Test that the hook can handle single-sided liquidity additions
+    function test_SingleSidedLiquidity() public {
+        // --- ARRANGE ---
+        uint256 liquidityBefore = poolManager.getLiquidity(
+            targetPoolId,
+            address(hook),
+            -887220,
+            887220
+        );
+
+        // --- ACT ---
+        // Add single-sided liquidity (only token0)
+        positionManager.mint(
+            homePoolKey,
+            TickMath.minUsableTick(60),
+            TickMath.maxUsableTick(60),
+            100 ether,
+            0, // No token1
+            type(uint256).max,
+            address(this),
+            block.timestamp,
+            Constants.ZERO_BYTES
+        );
+
+        // --- ASSERT ---
+        uint256 liquidityAfter = poolManager.getLiquidity(
+            targetPoolId,
+            address(hook),
+            -887220,
+            887220
+        );
+        assertGt(
+            liquidityAfter,
+            liquidityBefore,
+            "Hook should handle single-sided liquidity"
+        );
+    }
 }
