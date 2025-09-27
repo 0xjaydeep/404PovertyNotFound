@@ -5,7 +5,6 @@ import {Script, console} from "forge-std/Script.sol";
 import {InvestmentEngine} from "../src/InvestmentEngine.sol";
 import {PlanManager} from "../src/PlanManager.sol";
 import {PyUSDManager} from "../src/investments/PyUSDManager.sol";
-import {MockPyUSD} from "../src/mock/MockPyUSD.sol";
 import {IInvestmentEngine} from "../src/interfaces/IInvestmentEngine.sol";
 import {IPlanManager} from "../src/interfaces/IPlanManager.sol";
 
@@ -17,10 +16,9 @@ contract PyUSDIntegrationTestScript is Script {
     InvestmentEngine public investmentEngine;
     PlanManager public planManager;
     PyUSDManager public pyusdManager;
-    MockPyUSD public mockPyUSD;
 
-    // Mock addresses
-    address public PYUSD_TOKEN; // Will be set after deploying mock PyUSD
+    // Real Sepolia addresses
+    address constant PYUSD_TOKEN = 0xCaC524BcA292aaade2DF8A05cC58F0a65B1B3bB9; // Real PyUSD on Sepolia
     address constant UNISWAP_ROUTER = 0xE592427A0AEce92De3Edee1F18E0157C05861564; // Real Uniswap V3
     address constant WETH_TOKEN = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2; // Real WETH
     address constant USDC_ADDRESS = 0xa0B86a33e6417aEB573D4aebcA271d5f50E0c1b1; // Mock USDC
@@ -58,12 +56,8 @@ contract PyUSDIntegrationTestScript is Script {
     function deployContracts() internal {
         console.log("=== Deploying Contracts ===");
         
-        // Deploy mock PyUSD first
-        mockPyUSD = new MockPyUSD();
-        PYUSD_TOKEN = address(mockPyUSD);
-        mockPyUSD.mint(msg.sender, 1_000_000 * 10**18); // Mint 1 million tokens for testing
-        console.log("Mock PyUSD deployed at:", PYUSD_TOKEN);
-        console.log("Minted 1,000,000 mock PyUSD to:", msg.sender);
+        // Using real PyUSD on Sepolia
+        console.log("Using real PyUSD token at:", PYUSD_TOKEN);
 
         // Deploy core contracts
         planManager = new PlanManager();
@@ -132,13 +126,13 @@ contract PyUSDIntegrationTestScript is Script {
         
         console.log("PyUSD enabled:", investmentEngine.isPyUSDEnabled());
         
-        // Make deposits
-        investmentEngine.depositForUser(msg.sender, 5000, IInvestmentEngine.DepositType.Manual);
-        console.log("Deposited 5000 for testing");
+        // Make deposits (using amounts above minimum deposit requirement)
+        investmentEngine.depositForUser(msg.sender, 500, IInvestmentEngine.DepositType.Manual);
+        console.log("Deposited 500 for testing");
         logUserBalance(msg.sender);
         
         // Create and execute investment with stablecoin allocation
-        uint256 investmentId = investmentEngine.invest(1, 2000); // Conservative plan
+        uint256 investmentId = investmentEngine.invest(1, 200); // Conservative plan
         console.log("Created investment ID:", investmentId, "(should work without PyUSD)");
         
         investmentEngine.executeInvestment(investmentId);
@@ -188,7 +182,7 @@ contract PyUSDIntegrationTestScript is Script {
         
         // Create investment with stablecoin allocation
         console.log("Creating investment with PyUSD conversion...");
-        uint256 investmentId = investmentEngine.invest(1, 3000); // Conservative plan, 70% should convert to PyUSD
+        uint256 investmentId = investmentEngine.invest(1, 150); // Conservative plan, 70% should convert to PyUSD
         console.log("Created investment ID:", investmentId);
         
         console.log("Balance after investment creation:");
@@ -289,13 +283,13 @@ contract PyUSDIntegrationTestScript is Script {
         console.log("\n=== Test 6: PyUSD Edge Cases ===");
 
         // Add more funds for edge case tests
-        investmentEngine.depositForUser(msg.sender, 5000, IInvestmentEngine.DepositType.Manual);
-        console.log("Deposited additional 5000 for edge case tests");
+        investmentEngine.depositForUser(msg.sender, 400, IInvestmentEngine.DepositType.Manual);
+        console.log("Deposited additional 400 for edge case tests");
         logUserBalance(msg.sender);
         
         // Test investment with no stablecoin allocation (should not trigger PyUSD)
         console.log("Testing investment with no stablecoin allocation...");
-        uint256 investmentId = investmentEngine.invest(2, 1000); // All-crypto plan
+        uint256 investmentId = investmentEngine.invest(2, 150); // All-crypto plan
         console.log("Created all-crypto investment ID:", investmentId);
         
         investmentEngine.executeInvestment(investmentId);
@@ -310,7 +304,7 @@ contract PyUSDIntegrationTestScript is Script {
         try pyusdManager.pause() {
             console.log("PyUSD disabled");
             
-            uint256 disabledInvestment = investmentEngine.invest(1, 500);
+            uint256 disabledInvestment = investmentEngine.invest(1, 100);
             investmentEngine.executeInvestment(disabledInvestment);
             console.log("Investment executed with PyUSD disabled");
             
@@ -321,8 +315,8 @@ contract PyUSDIntegrationTestScript is Script {
         
         // Test batch operations
         console.log("\nTesting batch operations with PyUSD...");
-        uint256 batch1 = investmentEngine.invest(1, 300);
-        uint256 batch2 = investmentEngine.invest(1, 200);
+        uint256 batch1 = investmentEngine.invest(1, 100);
+        uint256 batch2 = investmentEngine.invest(1, 100);
         
         uint256[] memory batchIds = new uint256[](2);
         batchIds[0] = batch1;
