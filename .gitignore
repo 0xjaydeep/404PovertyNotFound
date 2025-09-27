@@ -13,3 +13,5 @@ states/
 # Optional
 .env
 .env.local
+
+tmp/**
