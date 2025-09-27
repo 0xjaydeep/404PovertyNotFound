@@ -10,11 +10,9 @@ optimizer_runs = 200
 # Network configurations
 [rpc_endpoints]
 local = "http://127.0.0.1:8545"
+arbitrum_sepolia = "https://sepolia-rollup.arbitrum.io/rpc"
 unichain = "https://130.rpc.thirdweb.com"
-unichain_sepolia = "https://1301.rpc.thirdweb.com"
-
-# Chain configurations (moved to profile section for compatibility)
-# Use rpc_endpoints for network configuration
+unichain_sepolia = "https://sepolia.unichain.org"
 
 # Etherscan configuration for verification
 [etherscan]

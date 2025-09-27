@@ -1,0 +1,19 @@
+{
+  "name": "poverty-not-found-oracle",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "tsc",
+    "test-contract": "ts-node scripts/testArbitrum.ts",
+    "deploy": "forge script script/DeploySimpleOracle.s.sol --rpc-url arbitrum_sepolia --broadcast --verify"
+  },
+  "dependencies": {
+    "@pythnetwork/hermes-client": "^2.0.0",
+    "@pythnetwork/pyth-sdk-solidity": "^4.2.0",
+    "@types/node": "^24.5.2",
+    "ethers": "^6.15.0",
+    "typescript": "^5.9.2"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.2"
+  }
+}

@@ -1,15 +1,221 @@
-# Remix compiler artifacts
-**/artifacts/
-**/artifacts/**
+# ==============================================
+# FOUNDRY & SOLIDITY PROJECT
+# ==============================================
 
-# Remix plugin state folders
-deps/
-states/
+# Foundry artifacts
+out/
+cache/
+cache_forge/
+broadcast/
 
-# Debug info
-*.dbg.json
-*.tsbuildinfo
+# Foundry dependencies
+lib/
 
-# Optional
+# Solidity compiler artifacts
+*.sol.js
+*.sol.ts
+artifacts/
+
+# ==============================================
+# NODE.JS & NPM/YARN
+# ==============================================
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Package manager files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Yarn files
+.yarn/
+.yarnrc.yml
+.yarn-integrity
+
+# NPM files
+.npm
+.npmrc
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# PNPM files
+.pnpm-debug.log*
+
+# ==============================================
+# ENVIRONMENT & SECURITY
+# ==============================================
+
+# Environment files
 .env
 .env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.staging
+
+# Private keys (Foundry/Ethereum)
+*.key
+*.pem
+.secret
+private.key
+mnemonic.txt
+
+# ==============================================
+# BUILD & DEPLOYMENT
+# ==============================================
+
+# Build outputs
+build/
+dist/
+.next/
+.nuxt/
+.cache/
+public/
+
+# Test artifacts
+test-results/
+coverage/
+coverage.json
+lcov.info
+*.lcov
+.nyc_output
+
+# ==============================================
+# DEVELOPMENT TOOLS & IDEs
+# ==============================================
+
+# VSCode
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# JetBrains IDEs
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+
+# ==============================================
+# OPERATING SYSTEM
+# ==============================================
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.AppleDouble
+.LSOverride
+.Spotlight-V100
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ==============================================
+# LOGS & RUNTIME
+# ==============================================
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# ==============================================
+# TEMPORARY & MISC
+# ==============================================
+
+# Temporary folders
+tmp/
+temp/
+
+# Editor backup files
+*.bak
+*.backup
+*.orig
+
+# Archive files
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# Debug files
+*.tsbuildinfo
+*.dbg.json
+
+# Serverless directories
+.serverless/
+
+# FuseBox cache
+.fusebox/
+
+# DynamoDB Local files
+.dynamodb/
+
+# TernJS port file
+.tern-port
+
+# Optional REPL history
+.node_repl_history
+
+# ESLint cache
+.eslintcache
+
+# Prettier cache
+.prettiercache
+
+# Stylelint cache
+.stylelintcache
