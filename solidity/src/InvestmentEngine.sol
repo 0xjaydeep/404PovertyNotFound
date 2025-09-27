@@ -4,6 +4,33 @@ pragma solidity ^0.8.13;
 import "./interfaces/IInvestmentEngine.sol";
 import "./interfaces/IPlanManager.sol";
 
+// PyUSD Manager Interface
+interface IPyUSDManager {
+    function convertETHToPyUSD(
+        address user,
+        uint256 investmentId,
+        uint256 ethAmount,
+        address destination
+    ) external payable returns (uint256 pyusdReceived);
+    
+    function transferPyUSD(
+        address user,
+        uint256 investmentId,
+        uint256 amount,
+        address destination
+    ) external;
+    
+    function getConversionQuote(uint256 ethAmount) 
+        external 
+        view 
+        returns (uint256 expectedPyUSD, uint256 minPyUSDOut);
+    
+    function getPyUSDBalance() external view returns (uint256);
+    function getUserPyUSDAllocation(address user) external view returns (uint256);
+    function getInvestmentPyUSDAmount(uint256 investmentId) external view returns (uint256);
+    function isInitialized() external view returns (bool);
+}
+
 contract InvestmentEngine is IInvestmentEngine {
     // State variables
     uint256 private _depositCounter;
@@ -11,6 +38,8 @@ contract InvestmentEngine is IInvestmentEngine {
     address public owner;
     address public planManager;
     uint256 public minimumDeposit;
+
+    IPyUSDManager public pyusdManager;
 
     // Storage mappings
     mapping(uint256 => UserDeposit) private _deposits;
@@ -46,10 +75,15 @@ contract InvestmentEngine is IInvestmentEngine {
         minimumDeposit = 100; // 100 wei minimum deposit
     }
 
+    // Set PyUSD Manager
+    function setPyUSDManager(address _pyusdManager) external onlyOwner {
+        require(_pyusdManager != address(0), "Invalid PyUSD manager address");
+        pyusdManager = IPyUSDManager(_pyusdManager);
+    }
+
     // Deposit Functions
     function deposit(uint256 amount, DepositType depositType) external {
         require(amount >= minimumDeposit, "Amount below minimum deposit");
-
         _processDeposit(msg.sender, amount, depositType);
     }
 
@@ -60,7 +94,6 @@ contract InvestmentEngine is IInvestmentEngine {
     ) external onlyOwner {
         require(user != address(0), "Invalid user address");
         require(amount >= minimumDeposit, "Amount below minimum deposit");
-
         _processDeposit(user, amount, depositType);
     }
 
@@ -78,7 +111,6 @@ contract InvestmentEngine is IInvestmentEngine {
                 amounts[i] >= minimumDeposit,
                 "Amount below minimum deposit"
             );
-
             _processDeposit(users[i], amounts[i], depositType);
         }
     }
@@ -128,6 +160,74 @@ contract InvestmentEngine is IInvestmentEngine {
             "Investment not pending"
         );
 
+        // Check if PyUSD integration is available and active
+        if (_shouldUsePyUSDIntegration()) {
+            _executeInvestmentWithPyUSD(investment);
+        } else {
+            // Original logic for backward compatibility
+            _executeInvestmentOriginal(investment);
+        }
+
+        emit InvestmentExecuted(investmentId, investment.user, investment.totalAmount);
+    }
+
+    // NEW: Check if PyUSD integration should be used
+    function _shouldUsePyUSDIntegration() internal view returns (bool) {
+        return address(pyusdManager) != address(0) && 
+               pyusdManager.isInitialized() && 
+               planManager != address(0);
+    }
+
+    // NEW: Enhanced execution with modular PyUSD support
+    function _executeInvestmentWithPyUSD(Investment storage investment) internal {
+        // Get investment plan allocations
+        try IPlanManager(planManager).getAssetAllocationLimits(investment.planId) 
+            returns (AssetAllocation[] memory allocations) {
+            
+            uint256 totalExecutedAmount = 0;
+            
+            for (uint256 i = 0; i < allocations.length; i++) {
+                AssetAllocation memory allocation = allocations[i];
+                uint256 allocationAmount = (investment.totalAmount * allocation.targetPercentage) / 10000;
+                
+                if (allocation.assetClass == AssetClass.Stablecoin && allocationAmount > 0) {
+                    // CRITICAL CALL: Delegate PyUSD conversion to PyUSDManager
+                    try pyusdManager.convertETHToPyUSD{value: allocationAmount}(
+                        investment.user,
+                        investment.investmentId,
+                        allocationAmount,
+                        allocation.tokenAddress // destination (address(0) keeps in PyUSDManager)
+                    ) returns (uint256 pyusdReceived) {
+                        // PyUSD conversion successful
+                        // PyUSDManager handles all tracking internally
+                    } catch {
+                        // If PyUSD conversion fails, continue with original logic
+                        // This ensures no investment execution fails due to PyUSD issues
+                    }
+                }
+                // Handle other asset classes here (Crypto, RWA, Liquidity)
+                // This is where you'd implement other investment logic
+                
+                totalExecutedAmount += allocationAmount;
+            }
+            
+            // Update investment status
+            investment.status = InvestmentStatus.Executed;
+            investment.executedAmount = totalExecutedAmount;
+            investment.executedAt = block.timestamp;
+
+            // Update user balance
+            _userBalances[investment.user].pendingInvestment -= investment.totalAmount;
+            _userBalances[investment.user].totalInvested += totalExecutedAmount;
+            
+        } catch {
+            // Fallback to original execution if anything fails
+            _executeInvestmentOriginal(investment);
+        }
+    }
+
+    // Original execution logic (preserved for backward compatibility)
+    function _executeInvestmentOriginal(Investment storage investment) internal {
         // Update investment status
         investment.status = InvestmentStatus.Executed;
         investment.executedAmount = investment.totalAmount;
@@ -137,8 +237,6 @@ contract InvestmentEngine is IInvestmentEngine {
         address user = investment.user;
         _userBalances[user].pendingInvestment -= investment.totalAmount;
         _userBalances[user].totalInvested += investment.totalAmount;
-
-        emit InvestmentExecuted(investmentId, user, investment.totalAmount);
     }
 
     function batchExecuteInvestments(
@@ -148,25 +246,21 @@ contract InvestmentEngine is IInvestmentEngine {
 
         for (uint256 i = 0; i < investmentIds.length; i++) {
             uint256 investmentId = investmentIds[i];
-
+            
             if (investmentId > 0 && investmentId <= _investmentCounter) {
                 Investment storage investment = _investments[investmentId];
 
                 if (investment.status == InvestmentStatus.Pending) {
-                    // Update investment status
-                    investment.status = InvestmentStatus.Executed;
-                    investment.executedAmount = investment.totalAmount;
-                    investment.executedAt = block.timestamp;
-
-                    // Update user balance
-                    address user = investment.user;
-                    _userBalances[user].pendingInvestment -= investment
-                        .totalAmount;
-                    _userBalances[user].totalInvested += investment.totalAmount;
+                    // Use the same executeInvestment logic
+                    if (_shouldUsePyUSDIntegration()) {
+                        _executeInvestmentWithPyUSD(investment);
+                    } else {
+                        _executeInvestmentOriginal(investment);
+                    }
 
                     emit InvestmentExecuted(
                         investmentId,
-                        user,
+                        investment.user,
                         investment.totalAmount
                     );
                 }
@@ -318,5 +412,43 @@ contract InvestmentEngine is IInvestmentEngine {
 
     function setMinimumDeposit(uint256 amount) external onlyOwner {
         minimumDeposit = amount;
+    }
+
+    // NEW: PyUSD-specific view functions (delegate to PyUSDManager)
+    function getPyUSDBalance() external view returns (uint256) {
+        if (address(pyusdManager) == address(0)) return 0;
+        return pyusdManager.getPyUSDBalance();
+    }
+    
+    function getUserPyUSDAllocation(address user) external view returns (uint256) {
+        if (address(pyusdManager) == address(0)) return 0;
+        return pyusdManager.getUserPyUSDAllocation(user);
+    }
+
+    function getInvestmentPyUSDAmount(uint256 investmentId) external view returns (uint256) {
+        if (address(pyusdManager) == address(0)) return 0;
+        return pyusdManager.getInvestmentPyUSDAmount(investmentId);
+    }
+
+    function isPyUSDEnabled() external view returns (bool) {
+        return _shouldUsePyUSDIntegration();
+    }
+
+    // NEW: Get PyUSD conversion quote (delegate to PyUSDManager)
+    function getPyUSDConversionQuote(uint256 ethAmount) 
+        external 
+        view 
+        returns (uint256 expectedPyUSD, uint256 minPyUSDOut) 
+    {
+        if (address(pyusdManager) == address(0)) {
+            return (0, 0);
+        }
+
+        return pyusdManager.getConversionQuote(ethAmount);
+    }
+
+    // Receive ETH function for deposits and swaps
+    receive() external payable {
+        // Allow contract to receive ETH
     }
 }
