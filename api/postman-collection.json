@@ -1,0 +1,542 @@
+{
+  "info": {
+    "name": "404 Poverty Not Found - DeFi Investment API",
+    "description": "Complete API collection for 404 Poverty Not Found hackathon project. Automated salary-based crypto investing platform.",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "userAddress",
+      "value": "0x703d7220Ed2f488e9C36f7e9E522685Aaf092296",
+      "type": "string"
+    },
+    {
+      "key": "usdcAddress",
+      "value": "0x5b73C5498c1E3b4dbA84de0F1833c4a029d90519",
+      "type": "string"
+    },
+    {
+      "key": "wethAddress",
+      "value": "0x34A1D3fff3958843C43aD80F30b94c510645C316",
+      "type": "string"
+    },
+    {
+      "key": "wbtcAddress",
+      "value": "0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "🏥 Health & System",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "health"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "System Info",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/health/system",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "health", "system"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "API Root",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/",
+              "host": ["{{baseUrl}}"],
+              "path": [""]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📋 Investment Plans",
+      "item": [
+        {
+          "name": "Get All Plans",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/plans",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "plans"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Plan by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/plans/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "plans", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Balanced Plan",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"planType\": 1,\n  \"name\": \"Balanced Crypto Portfolio\",\n  \"allocations\": [\n    {\n      \"assetClass\": 0,\n      \"tokenAddress\": \"{{wethAddress}}\",\n      \"targetPercentage\": 40,\n      \"minPercentage\": 35,\n      \"maxPercentage\": 45\n    },\n    {\n      \"assetClass\": 0,\n      \"tokenAddress\": \"{{wbtcAddress}}\",\n      \"targetPercentage\": 30,\n      \"minPercentage\": 25,\n      \"maxPercentage\": 35\n    },\n    {\n      \"assetClass\": 3,\n      \"tokenAddress\": \"{{usdcAddress}}\",\n      \"targetPercentage\": 30,\n      \"minPercentage\": 25,\n      \"maxPercentage\": 35\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/plans",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "plans"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Conservative Plan",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"planType\": 0,\n  \"name\": \"Conservative Stable Portfolio\",\n  \"allocations\": [\n    {\n      \"assetClass\": 3,\n      \"tokenAddress\": \"{{usdcAddress}}\",\n      \"targetPercentage\": 70,\n      \"minPercentage\": 65,\n      \"maxPercentage\": 75\n    },\n    {\n      \"assetClass\": 0,\n      \"tokenAddress\": \"{{wethAddress}}\",\n      \"targetPercentage\": 20,\n      \"minPercentage\": 15,\n      \"maxPercentage\": 25\n    },\n    {\n      \"assetClass\": 0,\n      \"tokenAddress\": \"{{wbtcAddress}}\",\n      \"targetPercentage\": 10,\n      \"minPercentage\": 5,\n      \"maxPercentage\": 15\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/plans",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "plans"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Aggressive Plan",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"planType\": 2,\n  \"name\": \"Aggressive Growth Portfolio\",\n  \"allocations\": [\n    {\n      \"assetClass\": 0,\n      \"tokenAddress\": \"{{wethAddress}}\",\n      \"targetPercentage\": 50,\n      \"minPercentage\": 45,\n      \"maxPercentage\": 55\n    },\n    {\n      \"assetClass\": 0,\n      \"tokenAddress\": \"{{wbtcAddress}}\",\n      \"targetPercentage\": 40,\n      \"minPercentage\": 35,\n      \"maxPercentage\": 45\n    },\n    {\n      \"assetClass\": 3,\n      \"tokenAddress\": \"{{usdcAddress}}\",\n      \"targetPercentage\": 10,\n      \"minPercentage\": 5,\n      \"maxPercentage\": 15\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/plans",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "plans"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Plan Types",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/plans/types/list",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "plans", "types", "list"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Asset Classes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/plans/assets/classes",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "plans", "assets", "classes"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "💰 Investments & Deposits",
+      "item": [
+        {
+          "name": "Deposit USDC (Salary)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userAddress\": \"{{userAddress}}\",\n  \"tokenAddress\": \"{{usdcAddress}}\",\n  \"amount\": \"2000\",\n  \"depositType\": 0\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/investments/deposit",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "investments", "deposit"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Deposit USDC (Bonus)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userAddress\": \"{{userAddress}}\",\n  \"tokenAddress\": \"{{usdcAddress}}\",\n  \"amount\": \"500\",\n  \"depositType\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/investments/deposit",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "investments", "deposit"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Investment (Plan 1)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userAddress\": \"{{userAddress}}\",\n  \"planId\": \"1\",\n  \"amount\": \"1000\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/investments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "investments"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Execute Investment (ID: 1)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/investments/1/execute",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "investments", "1", "execute"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Deposit Types",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/investments/deposit-types",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "investments", "deposit-types"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Platform Statistics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/investments/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "investments", "stats"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📊 Portfolio Tracking",
+      "item": [
+        {
+          "name": "Get User Portfolio",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/portfolio/{{userAddress}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "portfolio", "{{userAddress}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get USDC Balance",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/portfolio/{{userAddress}}/tokens/{{usdcAddress}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "portfolio", "{{userAddress}}", "tokens", "{{usdcAddress}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get WETH Balance",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/portfolio/{{userAddress}}/tokens/{{wethAddress}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "portfolio", "{{userAddress}}", "tokens", "{{wethAddress}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Portfolio Analytics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/portfolio/{{userAddress}}/analytics",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "portfolio", "{{userAddress}}", "analytics"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🪙 Token Information",
+      "item": [
+        {
+          "name": "Get All Supported Tokens",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/tokens",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tokens"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get USDC Info",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/tokens/{{usdcAddress}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tokens", "{{usdcAddress}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get WETH Info",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/tokens/{{wethAddress}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tokens", "{{wethAddress}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User USDC Balance",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/tokens/{{usdcAddress}}/balance/{{userAddress}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tokens", "{{usdcAddress}}", "balance", "{{userAddress}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get USDC Allowance",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/tokens/{{usdcAddress}}/allowance/{{userAddress}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tokens", "{{usdcAddress}}", "allowance", "{{userAddress}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🎯 Demo Scenarios",
+      "item": [
+        {
+          "name": "Scenario 1: Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "health"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Scenario 2: View Investment Plans",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/plans",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "plans"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Scenario 3: Salary Deposit",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userAddress\": \"{{userAddress}}\",\n  \"tokenAddress\": \"{{usdcAddress}}\",\n  \"amount\": \"3000\",\n  \"depositType\": 0\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/investments/deposit",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "investments", "deposit"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Scenario 4: Create Investment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userAddress\": \"{{userAddress}}\",\n  \"planId\": \"1\",\n  \"amount\": \"2000\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/investments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "investments"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Scenario 5: View Portfolio",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/portfolio/{{userAddress}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "portfolio", "{{userAddress}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Scenario 6: Portfolio Analytics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/portfolio/{{userAddress}}/analytics",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "portfolio", "{{userAddress}}", "analytics"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

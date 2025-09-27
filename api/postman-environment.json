@@ -1,0 +1,69 @@
+{
+  "id": "404poverty-hackathon-env",
+  "name": "404 Poverty Not Found - Local",
+  "values": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "userAddress",
+      "value": "0x703d7220Ed2f488e9C36f7e9E522685Aaf092296",
+      "type": "default",
+      "enabled": true,
+      "description": "Test user address from makeAddr('testUser1')"
+    },
+    {
+      "key": "user2Address",
+      "value": "0x9dFe716b6715278b0dE14430729e1DD7A3662fc5",
+      "type": "default",
+      "enabled": true,
+      "description": "Test user 2 address from makeAddr('testUser2')"
+    },
+    {
+      "key": "usdcAddress",
+      "value": "UPDATE_AFTER_DEPLOYMENT",
+      "type": "default",
+      "enabled": true,
+      "description": "Mock USDC token address - update after running HackathonDemo.s.sol"
+    },
+    {
+      "key": "wethAddress",
+      "value": "UPDATE_AFTER_DEPLOYMENT",
+      "type": "default",
+      "enabled": true,
+      "description": "Mock WETH token address - update after running HackathonDemo.s.sol"
+    },
+    {
+      "key": "wbtcAddress",
+      "value": "UPDATE_AFTER_DEPLOYMENT",
+      "type": "default",
+      "enabled": true,
+      "description": "Mock WBTC token address - update after running HackathonDemo.s.sol"
+    },
+    {
+      "key": "linkAddress",
+      "value": "UPDATE_AFTER_DEPLOYMENT",
+      "type": "default",
+      "enabled": true,
+      "description": "Mock LINK token address - update after running HackathonDemo.s.sol"
+    },
+    {
+      "key": "planManagerAddress",
+      "value": "UPDATE_AFTER_DEPLOYMENT",
+      "type": "default",
+      "enabled": true,
+      "description": "PlanManager contract address - update after deployment"
+    },
+    {
+      "key": "investmentEngineAddress",
+      "value": "UPDATE_AFTER_DEPLOYMENT",
+      "type": "default",
+      "enabled": true,
+      "description": "InvestmentEngineV2 contract address - update after deployment"
+    }
+  ],
+  "_postman_variable_scope": "environment"
+}
