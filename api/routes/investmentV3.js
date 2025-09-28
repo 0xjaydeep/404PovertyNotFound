@@ -262,11 +262,11 @@ router.post('/prepare-investment', validateInvestmentPreparation, async (req, re
       planId
     ]);
 
-    // Check user's USDC balance and allowance
-    const usdcContract = createTokenContract('USDC', provider);
+    // Check user's PYUSD balance and allowance
+    const pyusdContract = createTokenContract('PYUSD', provider);
     const [balance, allowance] = await Promise.all([
-      usdcContract.balanceOf(userAddress),
-      usdcContract.allowance(userAddress, network.contracts.INVESTMENT_ENGINE_V3)
+      pyusdContract.balanceOf(userAddress),
+      pyusdContract.allowance(userAddress, network.contracts.INVESTMENT_ENGINE_V3)
     ]);
 
     const needsApproval = BigInt(allowance) < BigInt(amount);
@@ -281,7 +281,7 @@ router.post('/prepare-investment', validateInvestmentPreparation, async (req, re
         transactions: needsApproval ? [
           {
             type: 'approval',
-            to: network.contracts.TOKENS.USDC,
+            to: network.contracts.TOKENS.PYUSD,
             data: new ethers.Interface(require('../abis/ERC20.json')).encodeFunctionData('approve', [
               network.contracts.INVESTMENT_ENGINE_V3,
               amount
@@ -626,6 +626,107 @@ router.post('/simulate-investment', validateInvestmentPreparation, async (req, r
         simulatedTokensToUser: simulatedResults,
         note: 'This is a simulation. In a real investment, the user would sign a transaction to execute the swaps.'
       }
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * @route GET /api/v3/price/:tokenSymbol
+ * @desc Get live price for a token from Pyth oracle
+ * @access Public
+ */
+router.get('/price/:tokenSymbol', async (req, res) => {
+  try {
+    const { tokenSymbol } = req.params;
+    const tokenAddress = network.contracts.TOKENS[tokenSymbol.toUpperCase()];
+
+    if (!tokenAddress) {
+      return res.status(404).json({
+        success: false,
+        error: 'Token symbol not supported'
+      });
+    }
+
+    const priceFeedId = await investmentEngine.priceFeedIds(tokenAddress);
+    if (priceFeedId === '0x0000000000000000000000000000000000000000000000000000000000000000') {
+        return res.status(404).json({
+            success: false,
+            error: 'Price feed ID not configured for this token'
+        });
+    }
+
+    const price = await investmentEngine.getPythPrice(priceFeedId);
+
+    // Pyth prices have a number of decimals, which we need to account for.
+    // For most USD pairs, it's 8 decimals.
+    const priceFormatted = ethers.formatUnits(price, 8);
+
+    res.json({
+      success: true,
+      data: {
+        tokenSymbol,
+        price: price.toString(),
+        priceFormatted: `$${priceFormatted}`
+      }
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * @route POST /api/v3/execute-investment-for-test
+ * @desc (FOR TESTING ONLY) Execute an investment directly using a private key
+ * @access Public
+ */
+router.post('/execute-investment-for-test', async (req, res) => {
+  try {
+    const { privateKey, planId, amount } = req.body;
+
+    if (!privateKey || !planId || !amount) {
+      return res.status(400).json({
+        success: false,
+        error: 'privateKey, planId, and amount are required'
+      });
+    }
+
+    // WARNING: This is highly insecure and for testing purposes only.
+    const testWallet = new ethers.Wallet(privateKey, provider);
+
+    // Connect to contracts with the test wallet
+    const pyusdContract = createTokenContract('PYUSD', provider).connect(testWallet);
+    const investmentEngineWithSigner = investmentEngine.connect(testWallet);
+
+    // 1. Approve the investment engine to spend PYUSD
+    const approveTx = await pyusdContract.approve(network.contracts.INVESTMENT_ENGINE_V3, amount);
+    await approveTx.wait();
+
+    // 2. Execute the investment
+    const investTx = await investmentEngineWithSigner.depositAndInvest(amount, planId);
+    const receipt = await investTx.wait();
+
+    res.json({
+      success: true,
+      message: 'Test investment executed successfully!',
+      data: {
+        userAddress: testWallet.address,
+        planId,
+        amount,
+        approvalTransactionHash: approveTx.hash,
+        investmentTransactionHash: investTx.hash,
+        blockNumber: receipt.blockNumber
+      },
+      warning: 'This endpoint is for testing only and is highly insecure. Do not use in production.'
     });
 
   } catch (error) {

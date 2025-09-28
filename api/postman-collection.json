@@ -152,7 +152,7 @@
           "response": []
         },
         {
-          "name": "Prepare Investment",
+          "name": "Prepare Investment (PYUSD)",
           "request": {
             "method": "POST",
             "header": [
@@ -283,6 +283,54 @@
                 "api",
                 "v3",
                 "simulate-investment"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Live Price (WETH)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v3/price/WETH",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v3",
+                "price",
+                "WETH"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Execute Investment (FOR TESTING ONLY)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"privateKey\": \"<YOUR_TEST_WALLET_PRIVATE_KEY>\",\n  \"planId\": \"{{planId}}\",\n  \"amount\": \"1000000\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v3/execute-investment-for-test",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v3",
+                "execute-investment-for-test"
               ]
             }
           },

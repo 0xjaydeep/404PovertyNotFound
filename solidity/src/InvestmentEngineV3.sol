@@ -2,39 +2,32 @@
 pragma solidity ^0.8.13;
 
 import "./interfaces/IPlanManager.sol";
-import "./interfaces/IUniswapV4Router.sol";
+import "./interfaces/IUniswapV3Router.sol";
+import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
+import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /**
  * @title InvestmentEngineV3Simple
- * @dev Simple DEX-Integrated Investment Engine for Hackathon MVP
- *
- * Core functionality:
- * - depositAndInvest(): One transaction creates diversified portfolio
- * - Direct token delivery to users (no custody)
- * - Instant execution via Uniswap V4
+ * @dev DEX-Integrated Investment Engine with Pyth oracle for live prices.
  */
 contract InvestmentEngineV3Simple {
     using SafeERC20 for IERC20;
 
-    /*//////////////////////////////////////////////////////////////
-                               STATE VARIABLES
-    //////////////////////////////////////////////////////////////*/
-
     address public owner;
     address public planManager;
-    IUniswapV4Router public router;
+    IUniswapV3Router public router;
+    IPyth public pyth;
     address public baseToken; // USDC
     uint24 public fee = 3000; // 0.3%
     uint256 public slippage = 500; // 5%
 
+    mapping(address => bytes32) public priceFeedIds;
+    bytes32 internal baseTokenPriceFeedId = 0xc1da76235f64b635b813a174fd33c86363732834a2ead6079d7cda42f6e76692; // PYUSD / USD
+
     uint256 private _investmentCounter;
     mapping(uint256 => Investment) public investments;
-
-    /*//////////////////////////////////////////////////////////////
-                               STRUCTS & EVENTS
-    //////////////////////////////////////////////////////////////*/
 
     struct Investment {
         address user;
@@ -58,42 +51,26 @@ contract InvestmentEngineV3Simple {
         uint256 amountOut
     );
 
-    /*//////////////////////////////////////////////////////////////
-                               CONSTRUCTOR
-    //////////////////////////////////////////////////////////////*/
-
-    constructor(address _planManager, address _router, address _baseToken) {
+    constructor(address _planManager, address _router, address _baseToken, address _pyth) {
         owner = msg.sender;
         planManager = _planManager;
-        router = IUniswapV4Router(_router);
+        router = IUniswapV3Router(_router);
         baseToken = _baseToken;
+        pyth = IPyth(_pyth);
     }
 
-    /*//////////////////////////////////////////////////////////////
-                               CORE FUNCTION
-    //////////////////////////////////////////////////////////////*/
-
-    /**
-     * @dev Deposit base tokens and instantly create diversified portfolio
-     * @param amount Amount of base tokens to invest
-     * @param planId Investment plan ID
-     * @return investmentId Investment identifier
-     */
     function depositAndInvest(
         uint256 amount,
         uint256 planId
     ) external returns (uint256 investmentId) {
         require(amount > 0, "Amount must be > 0");
 
-        // Get plan details
         IPlanManager.InvestmentPlan memory plan = IPlanManager(planManager)
             .getPlan(planId);
         require(plan.isActive, "Plan not active");
 
-        // Transfer base tokens from user
         IERC20(baseToken).safeTransferFrom(msg.sender, address(this), amount);
 
-        // Create investment record
         _investmentCounter++;
         investmentId = _investmentCounter;
         investments[investmentId] = Investment({
@@ -103,7 +80,6 @@ contract InvestmentEngineV3Simple {
             timestamp: block.timestamp
         });
 
-        // Execute swaps for each allocation
         for (uint256 i = 0; i < plan.allocations.length; i++) {
             IPlanManager.AssetAllocation memory allocation = plan.allocations[
                 i
@@ -113,13 +89,11 @@ contract InvestmentEngineV3Simple {
 
             if (allocationAmount > 0) {
                 if (allocation.tokenAddress == baseToken) {
-                    // Direct transfer for base token
                     IERC20(baseToken).safeTransfer(
                         msg.sender,
                         allocationAmount
                     );
                 } else {
-                    // Swap via Uniswap V4
                     _swapToken(allocation.tokenAddress, allocationAmount);
                 }
             }
@@ -129,36 +103,28 @@ contract InvestmentEngineV3Simple {
         return investmentId;
     }
 
-    /*//////////////////////////////////////////////////////////////
-                               INTERNAL FUNCTIONS
-    //////////////////////////////////////////////////////////////*/
-
-    /**
-     * @dev Execute token swap via Uniswap V4
-     * @param tokenOut Output token address
-     * @param amountIn Input amount in base token
-     */
     function _swapToken(address tokenOut, uint256 amountIn) internal {
-        // Calculate minimum output with slippage protection
-        uint256 minAmountOut = (amountIn * (10000 - slippage)) / 10000;
+        int256 priceTokenIn = getPythPrice(baseTokenPriceFeedId);
+        int256 priceTokenOut = getPythPrice(priceFeedIds[tokenOut]);
 
-        // Approve router
+        uint256 expectedAmountOut = (amountIn * uint256(priceTokenIn)) /
+            uint256(priceTokenOut);
+        uint256 minAmountOut = (expectedAmountOut * (10000 - slippage)) / 10000;
+
         IERC20(baseToken).approve(address(router), amountIn);
 
-        // Prepare swap params
-        IUniswapV4Router.ExactInputSingleParams memory params = IUniswapV4Router
+        IUniswapV3Router.ExactInputSingleParams memory params = IUniswapV3Router
             .ExactInputSingleParams({
                 tokenIn: baseToken,
                 tokenOut: tokenOut,
                 fee: fee,
-                recipient: msg.sender, // Direct to user
-                deadline: block.timestamp + 300, // 5 min
+                recipient: msg.sender,
+                deadline: block.timestamp + 300,
                 amountIn: amountIn,
                 amountOutMinimum: minAmountOut,
                 sqrtPriceLimitX96: 0
             });
 
-        // Execute swap
         try router.exactInputSingle(params) returns (uint256 amountOut) {
             emit TokenSwapped(
                 msg.sender,
@@ -168,14 +134,15 @@ contract InvestmentEngineV3Simple {
                 amountOut
             );
         } catch {
-            // On failure, send base tokens to user
             IERC20(baseToken).safeTransfer(msg.sender, amountIn);
         }
     }
 
-    /*//////////////////////////////////////////////////////////////
-                               VIEW FUNCTIONS
-    //////////////////////////////////////////////////////////////*/
+    function getPythPrice(bytes32 priceId) public view returns (int256) {
+        PythStructs.Price memory price = pyth.getPrice(priceId);
+        require(price.price > 0, "Invalid price");
+        return price.price;
+    }
 
     function getInvestment(
         uint256 investmentId
@@ -187,28 +154,32 @@ contract InvestmentEngineV3Simple {
         return _investmentCounter;
     }
 
-    /*//////////////////////////////////////////////////////////////
-                               ADMIN FUNCTIONS
-    //////////////////////////////////////////////////////////////*/
-
-    function setPlanManager(address _planManager) external {
-        require(msg.sender == owner, "Only owner");
+    function setPlanManager(address _planManager) external onlyOwner {
         planManager = _planManager;
     }
 
-    function setRouter(address _router) external {
-        require(msg.sender == owner, "Only owner");
-        router = IUniswapV4Router(_router);
+    function setRouter(address _router) external onlyOwner {
+        router = IUniswapV3Router(_router);
     }
 
-    function setSlippage(uint256 _slippage) external {
-        require(msg.sender == owner, "Only owner");
+    function setInitialPriceFeeds(address[] memory tokens, bytes32[] memory ids) external onlyOwner {
+        require(tokens.length == ids.length, "Mismatched arrays");
+        for (uint i = 0; i < tokens.length; i++) {
+            priceFeedIds[tokens[i]] = ids[i];
+        }
+    }
+
+    function setSlippage(uint256 _slippage) external onlyOwner {
         require(_slippage <= 2000, "Max 20%");
         slippage = _slippage;
     }
 
-    function rescueTokens(address token, uint256 amount) external {
+    function setPriceFeedId(address token, bytes32 priceId) external onlyOwner {
+        priceFeedIds[token] = priceId;
+    }
+
+    modifier onlyOwner() {
         require(msg.sender == owner, "Only owner");
-        IERC20(token).safeTransfer(owner, amount);
+        _;
     }
 }
