@@ -29,6 +29,12 @@ export function Header() {
               Plans
             </Link>
             <Link
+              href="/subscriptions"
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Subscriptions
+            </Link>
+            <Link
               href="/portfolio"
               className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >

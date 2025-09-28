@@ -10,7 +10,6 @@ Support for popular plans (Conservative, Balanced, Aggressive, Target Date)
 Custom plan creation with risk-based allocations
 Integration with KYC/compliance systems
 
-
 Investment Engine Contract
 
 deposit() - Handle incoming funds from salary/manual deposits
@@ -18,14 +17,11 @@ invest() - Execute investments across multiple asset classes
 rebalance() - Automatic portfolio rebalancing based on targets
 withdraw() - Controlled withdrawal with vesting rules
 
-
 Portfolio Tracker Contract
 
 viewPortfolio() - Real-time portfolio analytics and performance
 Track holdings across crypto, RWA tokens, and LP positions
 Generate tax reports and statements
-
-
 
 Investment Instruments Support:
 
