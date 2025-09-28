@@ -35,7 +35,7 @@ contract DeployV3 is Script {
         // 2. Deploy Core Contracts
         planManager = new PlanManager();
         router = new MockUniswapV4Router();
-        investmentEngineV3 = new InvestmentEngineV3Simple(address(planManager), address(router), address(usdc));
+        investmentEngineV3 = new InvestmentEngineV3Simple(address(planManager), address(router), address(usdc), address(0));
 
         // 3. Create a demo plan
         createDemoPlan();

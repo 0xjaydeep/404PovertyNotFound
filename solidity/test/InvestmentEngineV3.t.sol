@@ -6,6 +6,7 @@ import "../src/InvestmentEngineV3.sol";
 import "../src/PlanManager.sol";
 import "../src/tokens/MockERC20.sol";
 import "../src/mocks/MockUniswapV4Router.sol";
+import "../src/mocks/MockPyth.sol";
 import "../src/interfaces/IPlanManager.sol";
 
 /**
@@ -21,6 +22,7 @@ contract InvestmentEngineV3IntegrationTest is Test {
     InvestmentEngineV3Simple public investmentEngine;
     PlanManager public planManager;
     MockUniswapV4Router public mockRouter;
+    MockPyth public mockPyth;
 
     /*//////////////////////////////////////////////////////////////
                                TOKENS
@@ -88,10 +90,12 @@ contract InvestmentEngineV3IntegrationTest is Test {
         // Deploy core contracts
         planManager = new PlanManager();
         mockRouter = new MockUniswapV4Router();
+        mockPyth = new MockPyth();
         investmentEngine = new InvestmentEngineV3Simple(
             address(planManager),
             address(mockRouter),
-            address(usdc)
+            address(usdc),
+            address(mockPyth)
         );
 
         console.log("Contracts deployed successfully");

@@ -90,9 +90,11 @@ contract DeployInvestmentEngineV3Script is Script {
         investmentEngine = new InvestmentEngineV3Simple(
             address(planManager),
             address(mockRouter),
-            address(usdc)
+            address(usdc),
+            address(0) // Mock Pyth address - replace with actual Pyth address on mainnet
         );
         console.log("InvestmentEngineV3 deployed at:", address(investmentEngine));
+        console.log("Note: Entropy feature is disabled by default. Use setEntropy() to enable.");
     }
 
     function configureSystem() internal {
