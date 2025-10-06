@@ -1,0 +1,479 @@
+{
+  "info": {
+    "name": "404 Poverty Not Found - DeFi Investment API",
+    "description": "Complete API collection for 404 Poverty Not Found hackathon project. Automated salary-based crypto investing platform.",
+    "version": "1.1.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "userAddress",
+      "value": "0x703d7220Ed2f488e9C36f7e9E522685Aaf092296",
+      "type": "string"
+    },
+    {
+      "key": "planId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "investmentId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "usdcAddress",
+      "value": "0x5b73C5498c1E3b4dbA84de0F1833c4a029d90519",
+      "type": "string"
+    },
+    {
+      "key": "wethAddress",
+      "value": "0x34A1D3fff3958843C43aD80F30b94c510645C316",
+      "type": "string"
+    },
+    {
+      "key": "wbtcAddress",
+      "value": "0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "🚀 V3 Engine",
+      "item": [
+        {
+          "name": "Get V3 Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v3/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v3",
+                "status"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get V3 Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v3/stats",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v3",
+                "stats"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get V3 Plans",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v3/plans",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v3",
+                "plans"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get V3 Plan by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v3/plans/{{planId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v3",
+                "plans",
+                "{{planId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Investment Quote",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": \"1000000000\",\n  \"planId\": \"{{planId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v3/quote",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v3",
+                "quote"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Prepare Investment (PYUSD)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userAddress\": \"{{userAddress}}\",\n  \"amount\": \"1000000000\",\n  \"planId\": \"{{planId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v3/prepare-investment",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v3",
+                "prepare-investment"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Investment by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v3/investments/{{investmentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v3",
+                "investments",
+                "{{investmentId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Investments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v3/users/{{userAddress}}/investments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v3",
+                "users",
+                "{{userAddress}}",
+                "investments"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Portfolio",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v3/users/{{userAddress}}/portfolio",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v3",
+                "users",
+                "{{userAddress}}",
+                "portfolio"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get V3 Events",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v3/events",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v3",
+                "events"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Simulate Investment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userAddress\": \"{{userAddress}}\",\n  \"planId\": \"{{planId}}\",\n  \"amount\": \"1000000000\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v3/simulate-investment",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v3",
+                "simulate-investment"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Live Price (WETH)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v3/price/WETH",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v3",
+                "price",
+                "WETH"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Execute Investment (FOR TESTING ONLY)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"privateKey\": \"<YOUR_TEST_WALLET_PRIVATE_KEY>\",\n  \"planId\": \"{{planId}}\",\n  \"amount\": \"1000000\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v3/execute-investment-for-test",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v3",
+                "execute-investment-for-test"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📋 Investment Plans",
+      "item": [
+        {
+          "name": "Create Balanced Plan",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"planType\": 1,\n  \"name\": \"Balanced Crypto Portfolio V3\",\n  \"allocations\": [\n    {\n      \"assetClass\": 0,\n      \"tokenAddress\": \"{{wethAddress}}\",\n      \"targetPercentage\": 4000,\n      \"minPercentage\": 3500,\n      \"maxPercentage\": 4500\n    },\n    {\n      \"assetClass\": 0,\n      \"tokenAddress\": \"{{wbtcAddress}}\",\n      \"targetPercentage\": 3000,\n      \"minPercentage\": 2500,\n      \"maxPercentage\": 3500\n    },\n    {\n      \"assetClass\": 3,\n      \"tokenAddress\": \"{{usdcAddress}}\",\n      \"targetPercentage\": 3000,\n      \"minPercentage\": 2500,\n      \"maxPercentage\": 3500\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/plans",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "plans"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Plan Types",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/plans/types/list",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "plans",
+                "types",
+                "list"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Asset Classes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/plans/assets/classes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "plans",
+                "assets",
+                "classes"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🏥 Health & System",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "health"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Legacy",
+      "item": [
+        {
+          "name": "Get All Plans",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/plans",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "plans"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Plan by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/plans/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "plans",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

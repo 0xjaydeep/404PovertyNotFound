@@ -6,6 +6,11 @@ via_ir = true
 gas_reports = ["*"]
 optimizer = true
 optimizer_runs = 200
+remappings = [
+    "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+    "@pythnetwork/pyth-sdk-solidity/=lib/pyth-sdk-solidity/",
+    "forge-std/=lib/forge-std/src/",
+]
 
 # Network configurations
 [rpc_endpoints]
@@ -15,8 +20,8 @@ unichain = "https://130.rpc.thirdweb.com"
 unichain_sepolia = "https://sepolia.unichain.org"
 
 # Etherscan configuration for verification
-[etherscan]
-unichain = { key = "${ETHERSCAN_API_KEY}", chain = 130, url = "https://unichain.blockscout.com/api" }
-unichain_sepolia = { key = "${ETHERSCAN_API_KEY}", chain = 1301, url = "https://unichain-sepolia.blockscout.com/api" }
+# [etherscan]
+# unichain = { key = "${ETHERSCAN_API_KEY}", chain = 130, url = "https://unichain.blockscout.com/api" }
+# unichain_sepolia = { key = "${ETHERSCAN_API_KEY}", chain = 1301, url = "https://unichain-sepolia.blockscout.com/api" }
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
