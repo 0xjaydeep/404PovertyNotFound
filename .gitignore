@@ -1,138 +1,92 @@
-# =============================================================================
-# 404 POVERTY NOT FOUND - COMPREHENSIVE .GITIGNORE
-# =============================================================================
+# ==============================================
+# FOUNDRY & SOLIDITY PROJECT
+# ==============================================
 
-# =============================================================================
-# ENVIRONMENT & SECRETS
-# =============================================================================
-.env
-.env.example
-.env.local
-.env.development
-.env.test
-.env.production
-.env.staging
-*.pem
-*.key
-*.p12
-*.pfx
-
-# =============================================================================
-# FOUNDRY/SOLIDITY BUILD ARTIFACTS
-# =============================================================================
-# Foundry cache and build outputs
-cache/
+# Foundry artifacts
 out/
-artifacts/
-**/artifacts/
-**/artifacts/**
+cache/
+cache_forge/
+broadcast/
 
-# Foundry broadcast logs (keep structure, ignore local runs)
-broadcast/*/31337/
-broadcast/**/dry-run/
+# Foundry dependencies
+lib/
 
 # Solidity compiler artifacts
-*.sol.artifacts
-*.sol.cache
+*.sol.js
+*.sol.ts
+artifacts/
 
-# =============================================================================
-# NODE.JS/NPM
-# =============================================================================
-# Dependencies
+# ==============================================
+# NODE.JS & NPM/YARN
+# ==============================================
+
+# Dependency directories
 node_modules/
+jspm_packages/
+
+# Package manager files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Yarn files
+.yarn/
+.yarnrc.yml
+.yarn-integrity
+
+# NPM files
+.npm
+.npmrc
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-package-lock.json.bak
-yarn.lock.bak
 
-# Runtime data
-pids/
-*.pid
-*.seed
-*.pid.lock
+# PNPM files
+.pnpm-debug.log*
 
-# Coverage directory used by tools like istanbul
-coverage/
-*.lcov
-.nyc_output/
+# ==============================================
+# ENVIRONMENT & SECURITY
+# ==============================================
 
-# Logs
-logs/
-*.log
-lerna-debug.log*
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.staging
+
+# Private keys (Foundry/Ethereum)
+*.key
+*.pem
+.secret
+private.key
+mnemonic.txt
+
+# ==============================================
+# BUILD & DEPLOYMENT
+# ==============================================
 
 # Build outputs
-dist/
 build/
+dist/
 .next/
 .nuxt/
-.vuepress/dist/
+.cache/
+public/
 
-# =============================================================================
-# DEVELOPMENT TOOLS
-# =============================================================================
-# TypeScript
-*.tsbuildinfo
-.tscache/
-
-# ESLint
-.eslintcache
-
-# Jest
-.jest/
-
-# Testing
+# Test artifacts
 test-results/
-playwright-report/
+coverage/
 coverage.json
+lcov.info
+*.lcov
+.nyc_output
 
-# Debugging
-*.dbg.json
-.vscode-test/
+# ==============================================
+# DEVELOPMENT TOOLS & IDEs
+# ==============================================
 
-# =============================================================================
-# REMIX IDE (Legacy)
-# =============================================================================
-# Remix compiler artifacts (legacy support)
-deps/
-states/
-
-# =============================================================================
-# CLAUDE CODE
-# =============================================================================
-.claude/
-**/.claude/
-
-# =============================================================================
-# OPERATING SYSTEM
-# =============================================================================
-# macOS
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-
-# Windows
-Thumbs.db
-Thumbs.db:encryptable
-ehthumbs.db
-ehthumbs_vista.db
-*.stackdump
-[Dd]esktop.ini
-
-# Linux
-*~
-.fuse_hidden*
-.directory
-.Trash-*
-.nfs*
-
-# =============================================================================
-# EDITORS & IDEs
-# =============================================================================
 # VSCode
 .vscode/
 !.vscode/settings.json
@@ -142,15 +96,14 @@ ehthumbs_vista.db
 
 # JetBrains IDEs
 .idea/
-*.iws
 *.iml
 *.ipr
+*.iws
 
-# Vim/Neovim
+# Vim
 *.swp
 *.swo
 *~
-.vimrc.local
 
 # Emacs
 *~
@@ -161,68 +114,108 @@ ehthumbs_vista.db
 auto-save-list
 tramp
 
-# Sublime Text
-*.sublime-workspace
-*.sublime-project
+# ==============================================
+# OPERATING SYSTEM
+# ==============================================
 
-# =============================================================================
-# BLOCKCHAIN SPECIFIC
-# =============================================================================
-# Private keys and mnemonics
-mnemonic.txt
-private_keys/
-keystore/
-**/accounts.json
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.AppleDouble
+.LSOverride
+.Spotlight-V100
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
 
-# Network configuration
-networks.json
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
 
-# =============================================================================
-# DOCUMENTATION & TEMPORARY
-# =============================================================================
-# Documentation builds
-docs/build/
-docs/_build/
-site/
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
 
-# Temporary files
-*.tmp
-*.temp
-*.cache
-.cache/
+# ==============================================
+# LOGS & RUNTIME
+# ==============================================
 
-# Backup files
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# ==============================================
+# TEMPORARY & MISC
+# ==============================================
+
+# Temporary folders
+tmp/
+temp/
+
+# Editor backup files
 *.bak
 *.backup
 *.orig
 
-# =============================================================================
-# DEPLOYMENT & CI/CD
-# =============================================================================
-# Vercel
-.vercel/
+# Archive files
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
 
-# Netlify
-.netlify/
+# Debug files
+*.tsbuildinfo
+*.dbg.json
 
-# Firebase
-.firebase/
-firebase-debug.log
-firestore-debug.log
+# Serverless directories
+.serverless/
 
-# AWS
-.aws/
+# FuseBox cache
+.fusebox/
 
-# =============================================================================
-# MISC
-# =============================================================================
-# Runtime
-.runtime/
+# DynamoDB Local files
+.dynamodb/
 
-# Metrics and analytics
-.metrics/
-analytics/
+# TernJS port file
+.tern-port
 
-# User uploads (if any)
-uploads/
-user-data/
+# Optional REPL history
+.node_repl_history
+
+# ESLint cache
+.eslintcache
+
+# Prettier cache
+.prettiercache
+
+# Stylelint cache
+.stylelintcache
